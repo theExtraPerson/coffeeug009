@@ -23,7 +23,7 @@ export default function OrdersPage() {
               You have not activated a processing plant yet.
             </p>
             <Link href="/plants">
-              <Button className="w-full">Browse plants</Button>
+              <Button className="w-full">Start processing</Button>
             </Link>
           </div>
         ) : null}

@@ -13,21 +13,15 @@ import {
 } from "@/components/icons";
 import { AppShell, SectionTitle } from "@/components/app-shell";
 import { BrandLockup } from "@/components/brand";
-import { PlantCard } from "@/components/plant-card";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { Button } from "@/components/ui/button";
-import {
-  useAppSettings,
-  useEarnings,
-  useOrders,
-  useProducts,
-  useProfile,
-  useSessionUser,
-} from "@/hooks/use-app-data";
+import { useAppSettings, useEarnings, useProfile, useSessionUser } from "@/hooks/use-app-data";
 import { formatMoney } from "@/lib/money";
 import { timeUntil } from "@/lib/date";
 import {
   DAILY_RATE_PERCENT,
+  PROCESSING_PLANT_IMAGE,
+  PROCESSING_PLANT_NAME,
   REFERRAL_RATES,
   TERM_DAYS,
   payoutClockLabel,
@@ -36,13 +30,10 @@ import {
 export default function HomePage() {
   const { user } = useSessionUser();
   const { data: profile } = useProfile(user?.id);
-  const { data: products } = useProducts();
-  const { data: orders } = useOrders(user?.id);
   const { data: earnings } = useEarnings(user?.id);
   const { data: settings } = useAppSettings();
 
   const signedIn = Boolean(user);
-  const bonusLocked = !(orders ?? []).some((o) => o.product_category === "plant");
   const payoutLabel = payoutClockLabel(earnings?.payoutHour ?? settings?.payout_hour);
 
   return (
@@ -140,33 +131,44 @@ export default function HomePage() {
         <SectionTitle>How to earn with CoffeeUG</SectionTitle>
         <ol className="app-card divide-y divide-border">
           <Step n={1} title="Deposit to your wallet" body="Mobile money from MTN or Airtel, confirmed automatically." />
-          <Step n={2} title="Activate a processing plant" body="Pick any plant below. The cost leaves your wallet once." />
+          <Step
+            n={2}
+            title="Choose an amount to process"
+            body="Tap the processing plant and decide how much to invest. That amount leaves your wallet once."
+          />
           <Step
             n={3}
             title={`Returns arrive at ${payoutLabel} daily`}
-            body={`Each plant pays ${DAILY_RATE_PERCENT}% of its price every day after the coffee is processed and sold.`}
+            body={`The plant pays ${DAILY_RATE_PERCENT}% of the amount you invested, every day after the coffee is processed and sold.`}
           />
-          <Step n={4} title={`This runs for ${TERM_DAYS} days`} body="Withdraw any time the window is open, or activate another plant." />
+          <Step
+            n={4}
+            title={`This runs for ${TERM_DAYS} days`}
+            body="Withdraw any time the window is open, or process another batch."
+          />
         </ol>
       </section>
 
       <section className="mt-6 px-4">
-        <SectionTitle>Processing plants</SectionTitle>
-        <div className="space-y-4">
-          {(products ?? []).map((product) => (
-            <PlantCard
-              key={product.id}
-              product={product}
-              signedIn={signedIn}
-              bonusLocked={bonusLocked}
-            />
-          ))}
-          {!products?.length ? (
-            <p className="app-card p-4 text-sm text-muted-foreground">
-              Plants are being prepared. Please check back shortly.
-            </p>
-          ) : null}
-        </div>
+        <SectionTitle>Processing plant</SectionTitle>
+        <Link href="/plants#invest" className="app-card block overflow-hidden">
+          <img
+            src={PROCESSING_PLANT_IMAGE}
+            alt={PROCESSING_PLANT_NAME}
+            width={1280}
+            height={720}
+            className="h-52 w-full object-cover"
+          />
+          <div className="flex items-center justify-between gap-2 px-4 py-3">
+            <div>
+              <h3 className="font-display text-base font-semibold">{PROCESSING_PLANT_NAME}</h3>
+              <p className="text-xs text-muted-foreground">
+                Invest any amount. {DAILY_RATE_PERCENT}% back at {payoutLabel}.
+              </p>
+            </div>
+            <span className="chip chip-accent">PLANT</span>
+          </div>
+        </Link>
       </section>
 
       <section className="mt-6 px-4">
@@ -184,10 +186,10 @@ export default function HomePage() {
                 Get my link
               </Button>
             </Link>
-            <Link href="/plants">
+            <Link href="/plants#invest">
               <Button variant="secondary" className="w-full">
                 <Sprout className="size-4" />
-                All plants
+                Process coffee
               </Button>
             </Link>
           </div>

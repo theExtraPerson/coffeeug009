@@ -8,6 +8,34 @@ function rpcMessage(error: { message: string } | null) {
   return error.message.replace(/^.*?:\s*/, "");
 }
 
+/** Put a chosen amount into the processing plant. Returns are 10% of that amount. */
+export async function startProcessing(amount: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Please sign in first." };
+
+  const invested = Math.round(Number(amount));
+  if (!Number.isFinite(invested) || invested <= 0) {
+    return { error: "Enter an amount to process." };
+  }
+
+  const { error } = await supabase.rpc("invest_in_plant", {
+    _amount: invested,
+    _note: null,
+  });
+  if (error) return { error: rpcMessage(error) };
+
+  revalidatePath("/");
+  revalidatePath("/plants");
+  revalidatePath("/orders");
+  revalidatePath("/records");
+  revalidatePath("/team");
+  revalidatePath("/me");
+  return { error: null };
+}
+
 /** Activate a processing plant. All the money rules live in the SQL function. */
 export async function activatePlant(productId: string, note?: string) {
   const supabase = await createClient();

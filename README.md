@@ -1,7 +1,8 @@
 # CoffeeUG
 
-Coffee processing plants you activate with your wallet. Every active plant pays
-**10% of its price per day for 30 days**, credited at **10PM Africa/Kampala**.
+One coffee processing plant. Members invest any amount from their wallet and
+the plant pays **10% of that amount per day for 30 days**, credited at
+**10PM Africa/Kampala**.
 Referrals pay **6%** on level 1 and **1%** on level 2 of every plant a downline
 member activates. Withdrawals carry a **10% fee** and start at **UGX 3,000**.
 New members get a **UGX 500** signup bonus.
@@ -24,7 +25,7 @@ Money only moves through security-definer SQL functions:
 
 | Function | What it does |
 | --- | --- |
-| `purchase_product` | Debits the wallet, opens the plant, pays both commission levels |
+| `invest_in_plant` | Debits the chosen amount, opens the plant, pays both commission levels |
 | `claim_daily_income` | Credits one entry per plant per payout day |
 | `request_withdrawal` | Creates the PENDING payment that *is* the reservation |
 | `settle_payment` | The only place a payment becomes final and writes the ledger |
@@ -48,9 +49,11 @@ npm install
 
 ### 2. Create the database
 
-Run `supabase/migrations/0001_coffeeug_core.sql` against your Supabase project
-(SQL Editor, or `supabase db push`). It creates the schema, the RLS policies,
-every money function, and seeds the six plants.
+Run `supabase/migrations/0001_coffeeug_core.sql`, then
+`supabase/migrations/0002_variable_plant.sql`, against your Supabase project
+(SQL Editor, or `supabase db push`). The first creates the schema, the RLS
+policies, and the money functions. The second leaves a single processing plant
+that accepts any investment amount.
 
 ### 3. Environment
 

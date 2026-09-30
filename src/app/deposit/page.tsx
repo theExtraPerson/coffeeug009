@@ -207,8 +207,8 @@ export default function DepositPage() {
           <div className="app-card space-y-3 p-4 text-center">
             <p className="font-display text-xl font-bold text-accent">Deposit received</p>
             <p className="text-sm text-muted-foreground">{message}</p>
-            <Button className="w-full" onClick={() => router.push("/plants")}>
-              Activate a plant
+            <Button className="w-full" onClick={() => router.push("/plants#invest")}>
+              Process your coffee
             </Button>
           </div>
         ) : null}

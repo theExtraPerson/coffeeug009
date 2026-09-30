@@ -34,6 +34,8 @@ export const SUPPORT_HANDLE = "@coffeeug";
 
 export const BRAND_LOGO_PATH = "/brand/logo.jpg";
 export const HOW_TO_EARN_PATH = "/brand/how-to-earn.jpg";
+export const PROCESSING_PLANT_IMAGE = "/plants/processing-plant.jpg";
+export const PROCESSING_PLANT_NAME = "Coffee Processing Plant";
 
 export const ABOUT_PARAGRAPHS = [
   "CoffeeUG is a Uganda-focused coffee business built around the opportunities within the coffee industry. We aim to connect people with coffee-related business opportunities while promoting Uganda's coffee sector and its potential.",

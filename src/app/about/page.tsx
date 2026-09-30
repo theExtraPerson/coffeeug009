@@ -63,7 +63,7 @@ export default function AboutPage() {
         <section>
           <SectionTitle>How earning works</SectionTitle>
           <dl className="app-card divide-y divide-border">
-            <Fact term="Daily return" detail={`${DAILY_RATE_PERCENT}% of the plant price, every day`} />
+            <Fact term="Daily return" detail={`${DAILY_RATE_PERCENT}% of the amount you invest, every day`} />
             <Fact term="Term" detail={`${TERM_DAYS} days per plant`} />
             <Fact term="Payout time" detail={`${payoutClockLabel()} daily, Africa/Kampala`} />
             <Fact
