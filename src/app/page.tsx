@@ -168,6 +168,9 @@ export default function HomePage() {
             </div>
             <span className="chip chip-accent">PLANT</span>
           </div>
+          <Button size="lg" className="h-12 w-full">
+              Start the Coffee Processor
+          </Button>
         </Link>
       </section>
 

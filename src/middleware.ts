@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /** Screens that require a session. Everything else is public. */
 const PROTECTED = [
-  "/plants",
   "/invite",
   "/team",
   "/me",
