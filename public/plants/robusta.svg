@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Robusta coffee garden">
+  <defs>
+    <linearGradient id="robustaSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D1FAE5"/>
+      <stop offset="1" stop-color="#A7F3D0"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="24" fill="url(#robustaSky)"/>
+  <path d="M0 156h200v44H0z" fill="#166534"/>
+  <path d="M100 160V56" stroke="#4A2B14" stroke-width="9" stroke-linecap="round"/>
+  <g stroke="#4A2B14" stroke-width="6" stroke-linecap="round">
+    <path d="M100 118 66 96"/>
+    <path d="M100 118 134 96"/>
+    <path d="M100 86 72 68"/>
+    <path d="M100 86 128 68"/>
+  </g>
+  <g fill="#15803D">
+    <ellipse cx="56" cy="92" rx="20" ry="11" transform="rotate(-20 56 92)"/>
+    <ellipse cx="144" cy="92" rx="20" ry="11" transform="rotate(20 144 92)"/>
+    <ellipse cx="64" cy="62" rx="18" ry="10" transform="rotate(-20 64 62)"/>
+    <ellipse cx="136" cy="62" rx="18" ry="10" transform="rotate(20 136 62)"/>
+    <ellipse cx="100" cy="46" rx="16" ry="10"/>
+  </g>
+  <g fill="#DC2626">
+    <circle cx="74" cy="104" r="7"/>
+    <circle cx="126" cy="104" r="7"/>
+    <circle cx="84" cy="76" r="6"/>
+    <circle cx="118" cy="76" r="6"/>
+    <circle cx="100" cy="62" r="6"/>
+  </g>
+</svg>

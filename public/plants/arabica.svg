@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Arabica coffee plot on hillside">
+  <defs>
+    <linearGradient id="arabicaSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0F2FE"/>
+      <stop offset="1" stop-color="#BAE6FD"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="24" fill="url(#arabicaSky)"/>
+  <path d="M0 108 56 66l44 30 44-36 56 42v98H0z" fill="#14532D"/>
+  <path d="M0 140h200v60H0z" fill="#166534"/>
+  <g stroke="#065F46" stroke-width="4" stroke-linecap="round" opacity=".55">
+    <path d="M0 152h200"/>
+    <path d="M0 172h200"/>
+  </g>
+  <g fill="#22C55E">
+    <ellipse cx="34" cy="146" rx="16" ry="9"/>
+    <ellipse cx="78" cy="146" rx="16" ry="9"/>
+    <ellipse cx="122" cy="146" rx="16" ry="9"/>
+    <ellipse cx="166" cy="146" rx="16" ry="9"/>
+    <ellipse cx="56" cy="168" rx="16" ry="9"/>
+    <ellipse cx="100" cy="168" rx="16" ry="9"/>
+    <ellipse cx="144" cy="168" rx="16" ry="9"/>
+  </g>
+  <g fill="#DC2626">
+    <circle cx="34" cy="146" r="4"/>
+    <circle cx="122" cy="146" r="4"/>
+    <circle cx="100" cy="168" r="4"/>
+  </g>
+  <circle cx="44" cy="40" r="16" fill="#FDE68A"/>
+</svg>

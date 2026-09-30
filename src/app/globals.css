@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+/* UI theme cloned from sntka.com/join: a dark blue-grey base lit by three
+   radial glows, gradient cards with a 1px inset border, and a warm amber
+   gradient reserved for calls to action. Every value here came off that page's
+   computed styles. CoffeeUG's own leaf green is kept for growth and positive
+   amounts so the brand still reads through the borrowed shell. */
+
+@theme inline {
+  --radius: 1rem;
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-bean: var(--bean);
+  --color-leaf: var(--leaf);
+  --color-cherry: var(--cherry);
+  --color-gold: var(--gold);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-cream: var(--cream);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --shadow-soft: 0 10px 30px rgb(0 0 0 / 0.35);
+  --shadow-lift: 0 18px 46px rgb(0 0 0 / 0.5);
+  --shadow-glow: 0 8px 26px rgb(255 122 51 / 0.3);
+}
+
+:root {
+  color-scheme: dark;
+
+  --background: #0e0f16;
+  --foreground: #f2f1f6;
+  /* Cards are a gradient; this is the flat fallback and the border reference. */
+  --card: #1c1e2b;
+  --card-foreground: #f2f1f6;
+  /* Amber is the only bright colour on the page, so it always means "act". */
+  --primary: #ffa163;
+  --primary-foreground: #1a0d05;
+  --secondary: #23263a;
+  --secondary-foreground: #dcdbe6;
+  --muted: #171922;
+  --muted-foreground: #9a9eb2;
+  --accent: #ff9a5f;
+  --accent-foreground: #1a0d05;
+  /* CoffeeUG's own colours, from the logo. */
+  --bean: #c98a5a;
+  --leaf: #4ade80;
+  --cherry: #f87171;
+  --gold: #fcd34d;
+  --destructive: #f2603c;
+  --destructive-foreground: #1a0d05;
+  --success: #4ade80;
+  --success-foreground: #07160c;
+  --warning: #fbbf24;
+  /* One step up from the page, for tiles and inset panels. */
+  --cream: #1b1d2a;
+  --border: #2c2f40;
+  --input: #33364a;
+  --ring: #ffa163;
+
+  --surface-gradient: linear-gradient(#1c1e2b, #171924);
+  --input-gradient: linear-gradient(#1b1d2a, #171922);
+  --cta-gradient: linear-gradient(#ffa163, #ff7a33);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  min-height: 100%;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Four layers: three coloured glows over a vertical base gradient. Fixed so the
+   glows stay put while the page scrolls, exactly as on the reference. */
+body {
+  background-color: #0b0c11;
+  background-image:
+    radial-gradient(115% 55% at 85% -8%, rgb(255 122 51 / 0.26) 0%, transparent 62%),
+    radial-gradient(95% 45% at -15% 14%, rgb(122 102 255 / 0.22) 0%, transparent 58%),
+    radial-gradient(80% 40% at 50% 104%, rgb(74 214 232 / 0.14) 0%, transparent 60%),
+    linear-gradient(#141521 0%, #0e0f16 55%, #0b0c11 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* The amber call to action: gradient, outer glow, and a hairline of light along
+   the top edge to give it a raised face. */
+.brand-gradient {
+  background-image: var(--cta-gradient);
+  box-shadow:
+    var(--shadow-glow),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.35);
+}
+
+.app-card {
+  background-image: var(--surface-gradient);
+  border-radius: 16px;
+  box-shadow:
+    var(--shadow-soft),
+    inset 0 0 0 1px var(--border);
+}
+
+.app-panel {
+  background-image: var(--input-gradient);
+  border-radius: 13px;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.stat-tile {
+  border-radius: 13px;
+  background-image: var(--input-gradient);
+  box-shadow: inset 0 0 0 1px var(--border);
+  padding: 0.7rem 0.55rem;
+}
+
+.shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.shadow-lift {
+  box-shadow: var(--shadow-lift);
+}
+
+/* Status chips. Tinted fills rather than the pale pastels a light theme would
+   use, so they stay legible against the dark cards. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.chip-good {
+  background: rgb(74 222 128 / 0.16);
+  color: #6ee7a0;
+}
+
+.chip-wait {
+  background: rgb(251 191 36 / 0.16);
+  color: #fcd34d;
+}
+
+.chip-live {
+  background: rgb(74 214 232 / 0.16);
+  color: #67e8f9;
+}
+
+.chip-bad {
+  background: rgb(248 113 113 / 0.16);
+  color: #fca5a5;
+}
+
+.chip-off {
+  background: rgb(154 158 178 / 0.16);
+  color: #b4b7c6;
+}
+
+.chip-accent {
+  background: rgb(255 161 99 / 0.16);
+  color: #ffa163;
+}
+
+/* Inline alert, used for a gateway failure reason. */
+.alert-bad {
+  border-radius: 13px;
+  background: rgb(248 113 113 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(248 113 113 / 0.25);
+  color: #fca5a5;
+}
+
+/* Horizontal marquee for the payout ticker on the home screen. */
+@keyframes coffee-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: inline-flex;
+  min-width: 200%;
+  animation: coffee-marquee 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

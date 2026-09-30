@@ -1,0 +1,34 @@
+{
+  "name": "CoffeeUG — Grow, Export, Prosper",
+  "short_name": "CoffeeUG",
+  "description": "Activate a coffee processing plant and collect your returns every day with CoffeeUG.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0C11",
+  "theme_color": "#0B0C11",
+  "lang": "en-UG",
+  "categories": ["finance", "business"],
+  "icons": [
+    {
+      "src": "/brand/logo.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/logo.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Plants", "url": "/plants" },
+    { "name": "Deposit", "url": "/deposit" },
+    { "name": "Withdraw", "url": "/withdraw" },
+    { "name": "Team", "url": "/team" }
+  ]
+}

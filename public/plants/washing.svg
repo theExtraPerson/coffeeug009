@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Coffee washing station">
+  <rect width="200" height="200" rx="24" fill="#E0F2FE"/>
+  <path d="M0 150h200v50H0z" fill="#0C4A6E"/>
+  <g fill="#0EA5E9">
+    <rect x="24" y="96" width="70" height="54" rx="8"/>
+    <rect x="106" y="112" width="70" height="38" rx="8"/>
+  </g>
+  <g fill="#7DD3FC">
+    <rect x="32" y="104" width="54" height="38" rx="5"/>
+    <rect x="114" y="120" width="54" height="22" rx="5"/>
+  </g>
+  <path d="M94 112h12v14H94z" fill="#94A3B8"/>
+  <g fill="#78350F">
+    <rect x="40" y="70" width="46" height="26" rx="6"/>
+  </g>
+  <g fill="#DC2626">
+    <circle cx="52" cy="62" r="6"/>
+    <circle cx="66" cy="58" r="6"/>
+    <circle cx="80" cy="62" r="6"/>
+  </g>
+  <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".7">
+    <path d="M40 116h38"/>
+    <path d="M122 130h38"/>
+  </g>
+  <path d="M132 96v16" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
+</svg>

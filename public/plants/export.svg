@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Coffee export warehouse">
+  <rect width="200" height="200" rx="24" fill="#ECFDF5"/>
+  <path d="M0 152h200v48H0z" fill="#1C1917"/>
+  <path d="M28 88 100 48l72 40v64H28z" fill="#14532D"/>
+  <path d="M100 42l80 46H20z" fill="#166534"/>
+  <rect x="58" y="108" width="36" height="44" rx="4" fill="#A16207"/>
+  <rect x="106" y="108" width="36" height="44" rx="4" fill="#A16207"/>
+  <g stroke="#FDE68A" stroke-width="4" stroke-linecap="round">
+    <path d="M64 120h24"/>
+    <path d="M64 132h24"/>
+    <path d="M112 120h24"/>
+    <path d="M112 132h24"/>
+  </g>
+  <g fill="#FACC15">
+    <rect x="150" y="124" width="34" height="28" rx="4"/>
+    <rect x="16" y="124" width="34" height="28" rx="4"/>
+  </g>
+  <g fill="#78350F">
+    <ellipse cx="167" cy="138" rx="5" ry="9"/>
+    <ellipse cx="33" cy="138" rx="5" ry="9"/>
+  </g>
+</svg>
