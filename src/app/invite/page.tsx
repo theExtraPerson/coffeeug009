@@ -108,16 +108,16 @@ export default function InvitePage() {
             <CommissionRow
               level={1}
               rate={REFERRAL_RATES[0]}
-              body="Paid every time someone you invited activates a processing plant."
+              body="Paid when someone who used your code successfully invests in a plant."
             />
             <CommissionRow
               level={2}
               rate={REFERRAL_RATES[1]}
-              body="Paid when their invites activate a plant, so your team keeps earning for you."
+              body="Paid when their invite invests, using that member's own code."
             />
           </div>
           <p className="mt-2 px-1 text-xs text-muted-foreground">
-            Commission lands in your wallet immediately and is yours to withdraw.
+            Commission lands in your wallet only after that investment succeeds. A signup or a deposit does not pay it.
           </p>
         </section>
 
@@ -125,7 +125,7 @@ export default function InvitePage() {
           <div className="grid grid-cols-3 gap-2">
             <Tile label="Team size" value={String(team.total_members)} />
             <Tile label="Team volume" value={formatMoney(team.total_volume)} />
-            <Tile label="You earned" value={formatMoney(team.total_earned)} accent />
+            <Tile label="From team" value={formatMoney(team.total_earned)} accent />
           </div>
         ) : null}
 

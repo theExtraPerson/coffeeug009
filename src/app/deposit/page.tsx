@@ -13,7 +13,7 @@ import { detectProvider, normalizePhone } from "@/lib/phone";
 import { formatMoney } from "@/lib/money";
 import { MIN_DEPOSIT } from "@/lib/platform";
 
-const QUICK = [20000, 50000, 100000, 300000];
+const QUICK = [5000, 10000, 20000, 50000];
 
 type Phase = "form" | "waiting" | "done" | "failed";
 

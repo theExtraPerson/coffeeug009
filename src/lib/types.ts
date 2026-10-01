@@ -116,6 +116,11 @@ export type TeamMember = {
   earned: number;
   deposited: number;
   volume: number;
+  /** Code this member entered. Level 2 used their inviter's code, not yours. */
+  referral_code?: string | null;
+  rate?: number;
+  /** Level 2 only: the level-1 member who invited them. */
+  via_username?: string | null;
 };
 
 export type TeamLevel = {

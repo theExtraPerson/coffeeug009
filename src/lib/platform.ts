@@ -28,7 +28,7 @@ export const MIN_WITHDRAW = 3000;
 export const MAX_WITHDRAW = 5_000_000;
 export const WITHDRAW_FEE_RATE = 0.1;
 
-export const TELEGRAM_CHANNEL_URL = "https://t.me/coffeeug";
+export const TELEGRAM_CHANNEL_URL = "https://t.me/+x70pBloGZDNmYjg0";
 export const TELEGRAM_SUPPORT_URL = "https://t.me/coffeeug";
 export const SUPPORT_HANDLE = "@coffeeug";
 
@@ -55,7 +55,7 @@ function resolveSiteUrl() {
     .trim()
     .replace(/\/$/, "");
   if (vercel) return vercel.startsWith("http") ? vercel : `https://${vercel}`;
-  return "https://coffeeug.online";
+  return "https://coffeeug.vercel.app/";
 }
 
 export const SITE_URL = resolveSiteUrl();

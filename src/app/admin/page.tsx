@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Package,
   Settings,
+  Share2,
   Shield,
   Sprout,
   Users,
@@ -23,6 +24,7 @@ import { formatMoney } from "@/lib/money";
 import { AdminOrders } from "./orders-tab";
 import { AdminPayments } from "./payments-tab";
 import { AdminPlants } from "./plants-tab";
+import { AdminReferrals } from "./referrals-tab";
 import { AdminSettings } from "./settings-tab";
 import { AdminUsers } from "./users-tab";
 import { Stat } from "./shared";
@@ -32,6 +34,7 @@ type Tab =
   | "deposits"
   | "withdrawals"
   | "users"
+  | "referrals"
   | "activations"
   | "plants"
   | "admins"
@@ -42,6 +45,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: "deposits", label: "Deposits", icon: ArrowDownToLine },
   { id: "withdrawals", label: "Withdrawals", icon: ArrowUpFromLine },
   { id: "users", label: "Members", icon: Users },
+  { id: "referrals", label: "Referrals", icon: Share2 },
   { id: "activations", label: "Activations", icon: Package },
   { id: "plants", label: "Plants", icon: Sprout },
   { id: "admins", label: "Admins", icon: Shield },
@@ -120,6 +124,7 @@ export default function AdminPage() {
         {tab === "deposits" ? <AdminPayments type="DEPOSIT" onChanged={loadOverview} /> : null}
         {tab === "withdrawals" ? <AdminPayments type="WITHDRAWAL" onChanged={loadOverview} /> : null}
         {tab === "users" ? <AdminUsers /> : null}
+        {tab === "referrals" ? <AdminReferrals /> : null}
         {tab === "activations" ? <AdminOrders /> : null}
         {tab === "plants" ? <AdminPlants /> : null}
         {tab === "admins" ? <AdminsTab /> : null}

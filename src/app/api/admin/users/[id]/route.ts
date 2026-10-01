@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, jsonError } from "@/lib/admin-auth";
+import { loadReferralSnapshot, referralLinesForUser } from "@/server/referrals";
 
 /** One member in full: dates, wallet, referrals both ways, and their password. */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -50,10 +51,27 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       .order("created_at", { ascending: false }),
   ]);
 
-  const entries = ledger ?? [];
-  const balance = entries.reduce((sum, row) => sum + Number(row.amount), 0);
+  const { data: ledgerTotals, error: totalsError } = await admin
+    .from("ledger_entries")
+    .select("type, amount")
+    .eq("user_id", id)
+    .limit(10000);
+  if (totalsError) return jsonError(totalsError.message, 500);
+
+  let snapshot;
+  try {
+    snapshot = await loadReferralSnapshot(admin);
+  } catch (err) {
+    return jsonError(err instanceof Error ? err.message : "Could not load referrals", 500);
+  }
+  const lines = referralLinesForUser(snapshot, id);
+  const ownLink = snapshot.rows.find((row) => row.refereeId === id) ?? null;
+
+  const totals = ledgerTotals ?? [];
+  const balance = totals.reduce((sum, row) => sum + Number(row.amount), 0);
   const byType = (type: string) =>
-    entries.filter((row) => row.type === type).reduce((sum, row) => sum + Number(row.amount), 0);
+    totals.filter((row) => row.type === type).reduce((sum, row) => sum + Number(row.amount), 0);
+  const entries = ledger ?? [];
 
   const successfulDeposits = (payments ?? [])
     .filter((p) => p.type === "DEPOSIT" && p.status === "SUCCESS")
@@ -85,8 +103,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     },
     referrals: {
       invitedBy: upline ?? null,
-      members: downline ?? [],
-      count: (downline ?? []).length,
+      codeUsed: ownLink?.code ?? null,
+      members: lines,
+      count: lines.length,
+      directCount: (downline ?? []).length,
     },
     orders: orders ?? [],
     payments: payments ?? [],

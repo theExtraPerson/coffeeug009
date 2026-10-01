@@ -8,6 +8,7 @@ import { Share2 } from "@/components/icons";
 import { useSessionUser, useTeamStats } from "@/hooks/use-app-data";
 import { formatKampalaDate } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
+import { REFERRAL_RATES } from "@/lib/platform";
 
 export default function TeamPage() {
   const { user } = useSessionUser();
@@ -22,9 +23,13 @@ export default function TeamPage() {
       <div className="space-y-4 px-4 py-4">
         <div className="app-card grid grid-cols-3 gap-2 p-4">
           <Tile label="Members" value={String(team?.total_members ?? 0)} />
-          <Tile label="Team volume" value={formatMoney(team?.total_volume ?? 0)} />
-          <Tile label="Commission" value={formatMoney(team?.total_earned ?? 0)} accent />
+          <Tile label="Invested" value={formatMoney(team?.total_volume ?? 0)} />
+          <Tile label="From team" value={formatMoney(team?.total_earned ?? 0)} accent />
         </div>
+        <p className="px-1 text-xs text-muted-foreground">
+          Level 1 pays {REFERRAL_RATES[0]}% and level 2 pays {REFERRAL_RATES[1]}% of a successful
+          plant investment. A signup or a deposit alone does not pay commission.
+        </p>
 
         <div className="flex gap-2">
           {[1, 2].map((n) => {
@@ -52,8 +57,8 @@ export default function TeamPage() {
         {current ? (
           <div className="app-card grid grid-cols-3 gap-2 p-4">
             <Tile label="Members" value={String(current.members)} />
-            <Tile label="Their volume" value={formatMoney(current.volume)} />
-            <Tile label="You earned" value={formatMoney(current.earned)} accent />
+            <Tile label="They invested" value={formatMoney(current.volume)} />
+            <Tile label={`${current.rate}% earned`} value={formatMoney(current.earned)} accent />
           </div>
         ) : null}
 
@@ -69,15 +74,28 @@ export default function TeamPage() {
                 <p className="truncate text-sm font-semibold">
                   {member.name ?? member.username ?? "Member"}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="truncate text-xs text-muted-foreground">
+                  {member.via_username ? `Via @${member.via_username} · ` : ""}
+                  code {member.referral_code ?? "—"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
                   Joined {formatKampalaDate(member.joined_at)}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-sm font-bold text-primary">{formatMoney(member.earned)}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {formatMoney(member.volume)} activated
-                </p>
+                {member.volume > 0 ? (
+                  <>
+                    <p className="text-sm font-bold text-primary">{formatMoney(member.earned)}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {member.rate ?? current?.rate ?? 0}% of {formatMoney(member.volume)}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold text-muted-foreground">Awaiting</p>
+                    <p className="text-[10px] text-muted-foreground">investment</p>
+                  </>
+                )}
               </div>
             </div>
           ))}

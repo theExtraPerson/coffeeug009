@@ -15,7 +15,7 @@ import { AppShell, SectionTitle } from "@/components/app-shell";
 import { BrandLockup } from "@/components/brand";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { Button } from "@/components/ui/button";
-import { useAppSettings, useEarnings, useProfile, useSessionUser } from "@/hooks/use-app-data";
+import { useAppSettings, useEarnings, useProfile, useSessionUser, useTeamStats } from "@/hooks/use-app-data";
 import { formatMoney } from "@/lib/money";
 import { timeUntil } from "@/lib/date";
 import {
@@ -31,7 +31,9 @@ export default function HomePage() {
   const { user } = useSessionUser();
   const { data: profile } = useProfile(user?.id);
   const { data: earnings } = useEarnings(user?.id);
+  const { data: team } = useTeamStats(user?.id);
   const { data: settings } = useAppSettings();
+  const fromTeam = team?.total_earned ?? earnings?.referralEarned ?? 0;
 
   const signedIn = Boolean(user);
   const payoutLabel = payoutClockLabel(earnings?.payoutHour ?? settings?.payout_hour);
@@ -98,7 +100,12 @@ export default function HomePage() {
             <div className="mt-3 grid grid-cols-3 gap-2">
               <MiniStat label="Daily return" value={formatMoney(earnings.dailyRate)} />
               <MiniStat label="Active plants" value={String(earnings.activePlants)} />
-              <MiniStat label="From team" value={formatMoney(earnings.referralEarned)} />
+              <Link href="/team" className="stat-tile block">
+                <div className="text-[10px] font-semibold text-muted-foreground">From team</div>
+                <div className="mt-0.5 truncate text-sm font-bold text-primary">
+                  {formatMoney(fromTeam)}
+                </div>
+              </Link>
             </div>
           ) : null}
 

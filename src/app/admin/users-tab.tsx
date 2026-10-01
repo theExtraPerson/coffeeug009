@@ -59,12 +59,19 @@ type Detail = {
       referral_code: string | null;
       created_at: string;
     } | null;
+    codeUsed: string | null;
     members: {
       id: string;
       username: string | null;
       full_name: string | null;
       referral_code: string | null;
       created_at: string;
+      level: 1 | 2;
+      rate: number;
+      invested: number;
+      commission: number;
+      via_username: string | null;
+      status: "invested" | "waiting";
     }[];
     count: number;
   };
@@ -258,21 +265,28 @@ function UserDetail({ row, onChanged }: { row: UserRow; onChanged: () => void })
           label="Invited by"
           value={
             detail.referrals.invitedBy
-              ? `@${detail.referrals.invitedBy.username ?? "—"} (${detail.referrals.invitedBy.referral_code ?? "—"})`
+              ? `@${detail.referrals.invitedBy.username ?? "—"} · code ${detail.referrals.codeUsed ?? detail.referrals.invitedBy.referral_code ?? "—"}`
               : "direct signup"
           }
         />
         {detail.referrals.members.length ? (
-          <div className="max-h-56 space-y-1 overflow-y-auto">
+          <div className="max-h-64 space-y-1 overflow-y-auto">
             {detail.referrals.members.map((m) => (
-              <div key={m.id} className="flex items-center justify-between rounded-xl bg-card px-3 py-2">
-                <span className="truncate text-xs font-semibold">
-                  {m.full_name ?? "Member"}{" "}
-                  <span className="font-normal text-muted-foreground">@{m.username ?? "—"}</span>
-                </span>
-                <span className="shrink-0 text-[11px] text-muted-foreground">
-                  {formatKampalaDate(m.created_at)}
-                </span>
+              <div key={`${m.level}-${m.id}`} className="rounded-xl bg-card px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-xs font-semibold">
+                    L{m.level} · {m.full_name ?? "Member"}{" "}
+                    <span className="font-normal text-muted-foreground">@{m.username ?? "—"}</span>
+                  </span>
+                  <span className="shrink-0 text-xs font-bold text-primary">
+                    {m.status === "invested" ? formatMoney(m.commission) : "waiting"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {m.rate}% · code {m.referral_code ?? "—"}
+                  {m.via_username ? ` · via @${m.via_username}` : ""}
+                  {m.status === "invested" ? ` · invested ${formatMoney(m.invested)}` : " · no investment yet"}
+                </p>
               </div>
             ))}
           </div>

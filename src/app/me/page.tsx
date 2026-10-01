@@ -26,17 +26,22 @@ import {
   useIsAdmin,
   useProfile,
   useSessionUser,
+  useTeamStats,
 } from "@/hooks/use-app-data";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
 import { formatKampalaDate } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
-import { COMPANY_NAME, FOUNDED, SUPPORT_HANDLE } from "@/lib/platform";
+import { COMPANY_NAME, FOUNDED, REFERRAL_RATES, SUPPORT_HANDLE } from "@/lib/platform";
 
 export default function MePage() {
   const router = useRouter();
   const { user } = useSessionUser();
   const { data: profile } = useProfile(user?.id);
   const { data: earnings } = useEarnings(user?.id);
+  const { data: team } = useTeamStats(user?.id);
+  const fromTeam = team?.total_earned ?? earnings?.referralEarned ?? 0;
+  const level1 = team?.levels.find((level) => level.level === 1);
+  const level2 = team?.levels.find((level) => level.level === 2);
   const { data: settings } = useAppSettings();
   const { data: isAdmin } = useIsAdmin(user?.id);
   const { install } = usePwaInstall();
@@ -76,10 +81,20 @@ export default function MePage() {
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Tile label="From plants" value={formatMoney(earnings?.plantEarned ?? 0)} />
-            <Tile label="From team" value={formatMoney(earnings?.referralEarned ?? 0)} />
+            <Link href="/team" className="stat-tile block">
+              <div className="text-[10px] font-semibold text-muted-foreground">From team</div>
+              <div className="mt-0.5 truncate text-sm font-bold text-primary">
+                {formatMoney(fromTeam)}
+              </div>
+            </Link>
             <Tile label="Deposited" value={formatMoney(earnings?.totalDeposited ?? 0)} />
             <Tile label="Withdrawn" value={formatMoney(earnings?.totalWithdrawn ?? 0)} />
           </div>
+          <Link href="/team" className="mt-3 block text-xs text-muted-foreground">
+            Level 1 · {level1?.rate ?? REFERRAL_RATES[0]}% · {formatMoney(level1?.earned ?? 0)}
+            {" · "}
+            Level 2 · {level2?.rate ?? REFERRAL_RATES[1]}% · {formatMoney(level2?.earned ?? 0)}
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
