@@ -24,8 +24,15 @@ import {
   PROCESSING_PLANT_NAME,
   REFERRAL_RATES,
   TERM_DAYS,
+  WAYS_OF_EARNING_IMAGE,
   payoutClockLabel,
 } from "@/lib/platform";
+
+const CAROUSEL_IMAGES = [
+  "/brand/carousel-one.jpg",
+  "/brand/carousel-two.jpg",
+  "/brand/carousel-three.jpg",
+] as const;
 
 export default function HomePage() {
   const { user } = useSessionUser();
@@ -37,6 +44,7 @@ export default function HomePage() {
 
   const signedIn = Boolean(user);
   const payoutLabel = payoutClockLabel(earnings?.payoutHour ?? settings?.payout_hour);
+  const termDays = Number(settings?.term_days ?? TERM_DAYS);
 
   return (
     <AppShell>
@@ -49,7 +57,7 @@ export default function HomePage() {
       ) : null}
 
       {/* No banner: the page background's own glow is the decoration. */}
-      <header className="px-6 pb-4 pt-7">
+      <header className="px-6 pt-7">
         <div className="flex items-center justify-between">
           <BrandLockup size={42} />
           <div className="flex items-center gap-2">
@@ -80,7 +88,9 @@ export default function HomePage() {
         </p>
       </header>
 
-      <div className="px-4">
+      <BrandCarousel />
+
+      <div className="mt-4 px-4">
         <div className="app-card p-4">
           <div className="flex items-end justify-between">
             <div>
@@ -136,24 +146,33 @@ export default function HomePage() {
       {/* How it works, matching the four steps members already know. */}
       <section className="mt-6 px-4">
         <SectionTitle>How to earn with CoffeeUG</SectionTitle>
-        <ol className="app-card divide-y divide-border">
-          <Step n={1} title="Deposit to your wallet" body="Mobile money from MTN or Airtel, confirmed automatically." />
-          <Step
-            n={2}
-            title="Choose an amount to process"
-            body="Tap the processing plant and decide how much to invest. That amount leaves your wallet once."
+        <div className="app-card overflow-hidden">
+          <ol className="divide-y divide-border">
+            <Step n={1} title="Deposit to your wallet" body="Mobile money from MTN or Airtel, confirmed automatically." />
+            <Step
+              n={2}
+              title="Choose an amount to process"
+              body="Tap the processing plant and decide how much to invest. That amount leaves your wallet once."
+            />
+            <Step
+              n={3}
+              title={`Returns arrive at ${payoutLabel} daily`}
+              body={`The plant pays ${DAILY_RATE_PERCENT}% of the amount you invested, every day after the coffee is processed and sold.`}
+            />
+            <Step
+              n={4}
+              title={`This runs for ${termDays} days`}
+              body="Withdraw any time the window is open, or process another batch."
+            />
+          </ol>
+          <img
+            src={WAYS_OF_EARNING_IMAGE}
+            alt="The two ways of earning with CoffeeUG: 10% daily returns and referral commission"
+            width={677}
+            height={1015}
+            className="w-full border-t border-border"
           />
-          <Step
-            n={3}
-            title={`Returns arrive at ${payoutLabel} daily`}
-            body={`The plant pays ${DAILY_RATE_PERCENT}% of the amount you invested, every day after the coffee is processed and sold.`}
-          />
-          <Step
-            n={4}
-            title={`This runs for ${TERM_DAYS} days`}
-            body="Withdraw any time the window is open, or process another batch."
-          />
-        </ol>
+        </div>
       </section>
 
       <section className="mt-6 px-4">
@@ -218,6 +237,27 @@ export default function HomePage() {
         </Link>
       </section>
     </AppShell>
+  );
+}
+
+function BrandCarousel() {
+  const slides = [...CAROUSEL_IMAGES, ...CAROUSEL_IMAGES];
+  return (
+    <div className="brand-carousel mt-4" aria-hidden="true">
+      <div className="brand-carousel-track">
+        {slides.map((src, index) => (
+          <img
+            key={`${src}-${index}`}
+            src={src}
+            alt=""
+            width={1200}
+            height={800}
+            draggable={false}
+            className="brand-carousel-slide"
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 

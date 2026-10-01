@@ -71,7 +71,7 @@ export default function AboutPage() {
               detail={`${REFERRAL_RATES[0]}% level 1 · ${REFERRAL_RATES[1]}% level 2, after they invest`}
             />
             <Fact term="Registration bonus" detail="UGX 500 on your first sign-in" />
-            <Fact term="Withdrawals" detail="From UGX 3,000, with a 10% fee" />
+            <Fact term="Withdrawals" detail="From UGX 3,000, with a 15% fee" />
           </dl>
         </section>
 

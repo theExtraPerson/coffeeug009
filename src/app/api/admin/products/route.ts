@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, jsonError } from "@/lib/admin-auth";
+import { TERM_DAYS } from "@/lib/platform";
 
 export async function GET() {
   const { admin, error } = await requireAdmin();
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     .eq("id", 1)
     .maybeSingle();
 
-  const days = Number(body.days ?? settings?.term_days ?? 30);
+  const days = Number(body.days ?? settings?.term_days ?? TERM_DAYS);
   const dailyIncome = Number(
     body.daily_income ?? Math.round((price * Number(settings?.daily_rate_percent ?? 10)) / 100),
   );

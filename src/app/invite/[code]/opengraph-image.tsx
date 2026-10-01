@@ -65,7 +65,7 @@ export default async function Image({ params }: { params: Promise<{ code: string
               {invite}
             </div>
             <div style={{ marginTop: 24, fontSize: 22, color: "#DCDBE6" }}>
-              10% daily for 30 days · paid at 10PM
+              10% daily for 20 days · paid at 10PM
             </div>
           </div>
         </div>

@@ -12,9 +12,9 @@ export const COMPANY_SLUG = "coffeeugltd";
 export const BRAND_TAGLINE = "Grow · Export · Prosper";
 export const FOUNDED = "October 2026";
 
-/** A plant returns 10% of its price every day for 30 days. */
+/** A plant returns 10% of its price every day for 20 days. */
 export const DAILY_RATE_PERCENT = 10;
-export const TERM_DAYS = 30;
+export const TERM_DAYS = 20;
 /** Returns are credited at 22:00 Africa/Kampala — "10PM daily". */
 export const PAYOUT_HOUR = 22;
 
@@ -26,7 +26,7 @@ export const MIN_DEPOSIT = 1000;
 export const MAX_DEPOSIT = 10_000_000;
 export const MIN_WITHDRAW = 3000;
 export const MAX_WITHDRAW = 5_000_000;
-export const WITHDRAW_FEE_RATE = 0.1;
+export const WITHDRAW_FEE_RATE = 0.15;
 
 export const TELEGRAM_CHANNEL_URL = "https://t.me/+x70pBloGZDNmYjg0";
 export const TELEGRAM_SUPPORT_URL = "https://t.me/coffeeug";
@@ -34,6 +34,9 @@ export const SUPPORT_HANDLE = "@coffeeug";
 
 export const BRAND_LOGO_PATH = "/brand/logo.jpg";
 export const HOW_TO_EARN_PATH = "/brand/how-to-earn.jpg";
+export const WAYS_OF_EARNING_IMAGE = "/brand/ways-of-earning.jpg";
+export const INVITE_IMAGE = "/brand/invite-image.jpg";
+export const INVEST_IN_COFFEE_IMAGE = "/brand/invest-in-coffee.jpg";
 export const PROCESSING_PLANT_IMAGE = "/plants/processing-plant.jpg";
 export const PROCESSING_PLANT_NAME = "Coffee Processing Plant";
 
@@ -62,7 +65,7 @@ export const SITE_URL = resolveSiteUrl();
 
 export const DEFAULT_WELCOME_MESSAGE = `Welcome to CoffeeUG!
 
-Deposit to your wallet, activate a processing plant, and your returns arrive at 10PM every day for 30 days.
+Deposit to your wallet, activate a processing plant, and your returns arrive at 10PM every day for 20 days.
 
 Tap Channel for updates and Support if you need help.`;
 

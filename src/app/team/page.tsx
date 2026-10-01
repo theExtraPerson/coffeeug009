@@ -8,7 +8,7 @@ import { Share2 } from "@/components/icons";
 import { useSessionUser, useTeamStats } from "@/hooks/use-app-data";
 import { formatKampalaDate } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
-import { REFERRAL_RATES } from "@/lib/platform";
+import { INVEST_IN_COFFEE_IMAGE, REFERRAL_RATES } from "@/lib/platform";
 
 export default function TeamPage() {
   const { user } = useSessionUser();
@@ -113,6 +113,16 @@ export default function TeamPage() {
               </Link>
             </div>
           ) : null}
+        </div>
+
+        <div className="app-card overflow-hidden">
+          <img
+            src={INVEST_IN_COFFEE_IMAGE}
+            alt="Invest in coffee and live a fruitful life"
+            width={683}
+            height={1024}
+            className="w-full"
+          />
         </div>
       </div>
     </AppShell>

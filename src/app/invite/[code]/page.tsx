@@ -13,7 +13,7 @@ export async function generateMetadata({
   const invite = normalizeInviteCode(code) || code.toUpperCase().slice(0, 10);
   const title = `Join ${BRAND_NAME} with code ${invite}`;
   const description =
-    "Activate a coffee processing plant and collect your returns at 10PM every day for 30 days.";
+    "Activate a coffee processing plant and collect your returns at 10PM every day for 20 days.";
 
   return {
     title,

@@ -9,7 +9,7 @@ import { Logo } from "@/components/brand";
 import { useProfile, useSessionUser, useTeamStats } from "@/hooks/use-app-data";
 import { inviteShareText, inviteUrl } from "@/lib/invite";
 import { formatMoney } from "@/lib/money";
-import { BRAND_NAME, REFERRAL_RATES, SITE_URL } from "@/lib/platform";
+import { BRAND_NAME, INVITE_IMAGE, REFERRAL_RATES, SITE_URL } from "@/lib/platform";
 
 export default function InvitePage() {
   const { user } = useSessionUser();
@@ -58,6 +58,14 @@ export default function InvitePage() {
               Grow · Export · Prosper
             </p>
           </div>
+
+          <img
+            src={INVITE_IMAGE}
+            alt={`${BRAND_NAME} invitation poster`}
+            width={1086}
+            height={1629}
+            className="w-full"
+          />
 
           <div className="space-y-3 p-4">
             <div>

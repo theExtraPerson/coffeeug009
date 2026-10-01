@@ -27,7 +27,7 @@ const FAQ = [
   },
   {
     q: "How much is the withdrawal fee?",
-    a: "10% of the amount you request. The withdraw screen shows the fee and the exact amount that will reach your phone before you confirm.",
+    a: "15% of the amount you request. The withdraw screen shows the fee and the exact amount that will reach your phone before you confirm.",
   },
   {
     q: "Can I change who invited me?",

@@ -211,7 +211,7 @@ export async function dispatchWithdrawal(admin: Admin, paymentId: string) {
 
   try {
     const result = await sendMoney({
-      // The member pays the 10% fee, so only the net amount is sent out.
+      // The member pays the withdrawal fee, so only the net amount is sent out.
       amount: Math.round(payment.net_amount),
       phone: payment.phone_number,
       reference: payment.external_reference,

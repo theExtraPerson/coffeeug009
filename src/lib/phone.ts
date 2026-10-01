@@ -34,8 +34,9 @@ export function detectProvider(input: string): "MTN" | "AIRTEL" | null {
   return null;
 }
 
+/** Admin withdrawals show only the local prefix: 256701234567 → 070***********. */
 export function maskPhone(phone: string | null | undefined) {
-  const value = (phone ?? "").trim();
-  if (value.length < 7) return value || "—";
-  return `${value.slice(0, 4)}****${value.slice(-3)}`;
+  const local = normalizePhone(phone ?? "");
+  if (local.length < 3) return "—";
+  return `${local.slice(0, 3)}${"*".repeat(11)}`;
 }

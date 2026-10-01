@@ -8,7 +8,7 @@ const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" }
 
 const title = `${BRAND_NAME} | ${BRAND_TAGLINE}`;
 const description =
-  "Activate a coffee processing plant with CoffeeUG and collect your returns at 10PM every day for 30 days.";
+  "Activate a coffee processing plant with CoffeeUG and collect your returns at 10PM every day for 20 days.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

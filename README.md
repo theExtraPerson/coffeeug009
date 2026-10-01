@@ -1,10 +1,10 @@
 # CoffeeUG
 
 One coffee processing plant. Members invest any amount from their wallet and
-the plant pays **10% of that amount per day for 30 days**, credited at
+the plant pays **10% of that amount per day for 20 days**, credited at
 **10PM Africa/Kampala**.
 Referrals pay **6%** on level 1 and **1%** on level 2 of every plant a downline
-member activates. Withdrawals carry a **10% fee** and start at **UGX 3,000**.
+member activates. Withdrawals carry a **15% fee** and start at **UGX 3,000**.
 New members get a **UGX 500** signup bonus.
 
 Deposits are automatic through MarzPay mobile money. Withdrawals can be sent

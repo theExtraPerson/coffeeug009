@@ -34,7 +34,7 @@ export default async function Image() {
           GROW · EXPORT · PROSPER
         </div>
         <div style={{ fontSize: 24, color: "#FFA163" }}>
-          Real coffee, real income · 10% daily for 30 days
+          Real coffee, real income · 10% daily for 20 days
         </div>
       </div>
     ),

@@ -22,7 +22,7 @@ import {
   payoutClockLabel,
 } from "@/lib/platform";
 
-const QUICK = [10_000, 20_000, 50_000, 100_000, 300_000, 1_000_000];
+const QUICK = [5_000, 10_000, 20_000, 50_000, 100_000, 300_000, 1_000_000];
 
 type Step = "plant" | "amount" | "started";
 
