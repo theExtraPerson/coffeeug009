@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, jsonError } from "@/lib/admin-auth";
-import { maskPhone } from "@/lib/phone";
 import { dispatchWithdrawal, settlePayment } from "@/server/payments";
 
 /** Deposit and withdrawal queues, newest first. */
@@ -33,15 +32,10 @@ export async function GET(request: Request) {
   const memberOf = new Map((profiles ?? []).map((p) => [p.id, p]));
 
   return NextResponse.json({
-    payments: (payments ?? []).map((p) => {
-      const member = memberOf.get(p.user_id) ?? null;
-      if (type !== "WITHDRAWAL") return { ...p, member };
-      return {
-        ...p,
-        phone_number: maskPhone(p.phone_number),
-        member: member ? { ...member, phone: maskPhone(member.phone) } : null,
-      };
-    }),
+    payments: (payments ?? []).map((p) => ({
+      ...p,
+      member: memberOf.get(p.user_id) ?? null,
+    })),
   });
 }
 
