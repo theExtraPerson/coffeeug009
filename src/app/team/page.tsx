@@ -23,6 +23,17 @@ export default function TeamPage() {
   return (
     <AppShell title="My team" back="/">
       <div className="space-y-4 px-4 py-4">
+        <div className="app-card p-4">
+          <p className="font-display text-4xl font-bold text-primary">{team?.total_members ?? 0}</p>
+          <p className="text-sm font-semibold">
+            {(team?.total_members ?? 0) === 1
+              ? "member registered under you"
+              : "members registered under you"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Level 1 and level 2, including people who have not invested yet.
+          </p>
+        </div>
         <div className="app-card grid grid-cols-3 gap-2 p-4">
           <Tile label="Members" value={String(team?.total_members ?? 0)} />
           <Tile label="Invested" value={formatMoney(team?.total_volume ?? 0)} />

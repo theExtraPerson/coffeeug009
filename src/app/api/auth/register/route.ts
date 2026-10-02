@@ -1,7 +1,37 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidUsername, normalizeUsername, usernameToEmail } from "@/lib/username";
 import { normalizeInviteCode } from "@/lib/invite";
+
+/** Put the new member on the inviter's team as soon as the account exists. */
+async function recordInvite(admin: SupabaseClient, userId: string, invite: string) {
+  if (!invite) return;
+
+  const { data: referrer } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("referral_code", invite)
+    .neq("id", userId)
+    .maybeSingle();
+  if (!referrer) return;
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("referred_by")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.referred_by && profile.referred_by !== referrer.id) return;
+
+  await admin.from("referrals").upsert(
+    { referrer_id: referrer.id, referee_id: userId, referral_code: invite },
+    { onConflict: "referee_id", ignoreDuplicates: true },
+  );
+
+  if (!profile?.referred_by) {
+    await admin.from("profiles").update({ referred_by: referrer.id }).eq("id", userId).is("referred_by", null);
+  }
+}
 
 /**
  * Registration runs server-side because two things need the service role:
@@ -86,8 +116,10 @@ export async function POST(request: Request) {
       { onConflict: "user_id" },
     );
 
-  // The trigger already built the profile; this covers a database where the
-  // trigger is missing and also returns the member's own code immediately.
+  // The trigger may already have linked the invite. This writes the same
+  // team row if it did not, so the member shows up before they invest.
+  await recordInvite(admin, created.user.id, invite);
+
   const { data: profile } = await admin
     .from("profiles")
     .select("referral_code")

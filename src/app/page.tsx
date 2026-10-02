@@ -41,6 +41,9 @@ export default function HomePage() {
   const { data: team } = useTeamStats(user?.id);
   const { data: settings } = useAppSettings();
   const fromTeam = team?.total_earned ?? earnings?.referralEarned ?? 0;
+  const registered = team?.total_members ?? 0;
+  const level1Count = team?.levels.find((level) => Number(level.level) === 1)?.members ?? 0;
+  const level2Count = team?.levels.find((level) => Number(level.level) === 2)?.members ?? 0;
 
   const signedIn = Boolean(user);
   const payoutLabel = payoutClockLabel(earnings?.payoutHour ?? settings?.payout_hour);
@@ -203,6 +206,17 @@ export default function HomePage() {
       <section className="mt-6 px-4">
         <SectionTitle>Invite and earn</SectionTitle>
         <div className="app-card space-y-3 p-4">
+          {signedIn ? (
+            <Link href="/team" className="block">
+              <p className="font-display text-3xl font-bold text-primary">{registered}</p>
+              <p className="text-sm font-semibold">
+                {registered === 1 ? "member registered under you" : "members registered under you"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Level 1 · {level1Count} · Level 2 · {level2Count}
+              </p>
+            </Link>
+          ) : null}
           <p className="text-sm text-muted-foreground">
             When someone you invited activates a plant, you earn{" "}
             <span className="font-bold text-accent">{REFERRAL_RATES[0]}%</span> of it. Their own

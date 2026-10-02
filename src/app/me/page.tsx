@@ -31,7 +31,7 @@ import {
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
 import { formatKampalaDate } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
-import { COMPANY_NAME, FOUNDED, REFERRAL_RATES, SUPPORT_HANDLE } from "@/lib/platform";
+import { COMPANY_NAME, FOUNDED, SUPPORT_HANDLE } from "@/lib/platform";
 
 export default function MePage() {
   const router = useRouter();
@@ -91,9 +91,11 @@ export default function MePage() {
             <Tile label="Withdrawn" value={formatMoney(earnings?.totalWithdrawn ?? 0)} />
           </div>
           <Link href="/team" className="mt-3 block text-xs text-muted-foreground">
-            Level 1 · {level1?.rate ?? REFERRAL_RATES[0]}% · {formatMoney(level1?.earned ?? 0)}
+            {team?.total_members ?? 0} members registered
             {" · "}
-            Level 2 · {level2?.rate ?? REFERRAL_RATES[1]}% · {formatMoney(level2?.earned ?? 0)}
+            Level 1 · {level1?.members ?? 0} · {formatMoney(level1?.earned ?? 0)}
+            {" · "}
+            Level 2 · {level2?.members ?? 0} · {formatMoney(level2?.earned ?? 0)}
           </Link>
         </div>
 
