@@ -1,17 +1,20 @@
-/** Local form used across the UI: 07XXXXXXXX. */
-export function normalizePhone(input: string) {
-  const digits = (input ?? "").replace(/\D/g, "");
-  if (digits.startsWith("256")) return `0${digits.slice(3)}`;
-  if (digits.startsWith("0")) return digits;
-  if (digits) return `0${digits}`;
-  return "";
+/** Digits after the country code, with a single leading 0: 0709867453. */
+function localDigits(input: string) {
+  let digits = (input ?? "").replace(/\D/g, "");
+  if (digits.startsWith("256")) digits = digits.slice(3);
+  digits = digits.replace(/^0+/, "");
+  return digits;
 }
 
-/** Strict MSISDN for MarzPay: 2567XXXXXXXX, or null when unusable. */
+/** Local form used across the UI: 0709867453, never 2560709867453. */
+export function normalizePhone(input: string) {
+  const digits = localDigits(input);
+  return digits ? `0${digits}` : "";
+}
+
+/** Strict MSISDN for MarzPay: 256709867453, or null when unusable. */
 export function toMsisdn(input: string): string | null {
-  const digits = (input ?? "").replace(/\D/g, "");
-  if (/^0[37]\d{8}$/.test(digits)) return `256${digits.slice(1)}`;
-  if (/^256[37]\d{8}$/.test(digits)) return digits;
+  const digits = localDigits(input);
   if (/^[37]\d{8}$/.test(digits)) return `256${digits}`;
   return null;
 }

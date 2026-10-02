@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatKampala } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
+import { normalizePhone } from "@/lib/phone";
 import type { Payment } from "@/lib/types";
 
 type Row = Payment & {
@@ -123,7 +124,7 @@ export function AdminPayments({
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {row.phone_number} ·{" "}
+                  {normalizePhone(row.phone_number) || row.phone_number} ·{" "}
                   {row.provider ?? "—"} · {row.mode}
                 </p>
                 <p className="text-xs text-muted-foreground">{formatKampala(row.created_at)}</p>
