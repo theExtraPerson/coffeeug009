@@ -124,7 +124,7 @@ export function AdminPayments({
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {isWithdrawal ? maskPhone(row.phone_number) : row.phone_number} ·{" "}
+                  {isWithdrawal ? row.phone_number : row.phone_number} ·{" "}
                   {row.provider ?? "—"} · {row.mode}
                 </p>
                 <p className="text-xs text-muted-foreground">{formatKampala(row.created_at)}</p>
