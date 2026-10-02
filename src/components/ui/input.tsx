@@ -2,8 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Inputs follow the reference theme: a dark vertical gradient with a 1px inset
- * border rather than an outline, so they read as recessed panels.
+ * Inputs sit on the cream page as a white panel with a green hairline.
  */
 export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (

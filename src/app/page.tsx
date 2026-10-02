@@ -291,7 +291,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 function Step({ n, title, body }: { n: number; title: string; body: string }) {
   return (
     <li className="flex gap-3 p-4">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gold text-xs font-bold text-[#14331F]">
         {n}
       </span>
       <div>

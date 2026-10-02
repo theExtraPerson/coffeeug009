@@ -21,7 +21,7 @@ function BottomNav() {
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-40 bg-[#101220] shadow-[inset_0_1px_0_0_var(--border)]">
+      <nav className="fixed inset-x-0 bottom-0 z-40 bg-card shadow-[inset_0_1px_0_0_var(--border)]">
         <div className="mx-auto flex max-w-[560px] items-stretch justify-between px-0.5 py-1.5">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = href === "/" ? pathname === "/" : pathname.startsWith(href);

@@ -1,10 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Fira_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { BRAND_NAME, BRAND_TAGLINE, COMPANY_NAME, SITE_URL } from "@/lib/platform";
 import "./globals.css";
 
-const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" });
+const fira = Fira_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-fira",
+});
 
 const title = `${BRAND_NAME} | ${BRAND_TAGLINE}`;
 const description =
@@ -16,7 +20,7 @@ export const metadata: Metadata = {
   description,
   applicationName: BRAND_NAME,
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: BRAND_NAME },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: BRAND_NAME },
   // The logo doubles as the favicon and the app icon, so the mark appears on
   // the site, the installed app, and every shared link.
   icons: {
@@ -36,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0B0C11",
+  themeColor: "#146C34",
   width: "device-width",
   initialScale: 1,
 };
@@ -44,7 +48,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${grotesk.variable} antialiased`}>
+      <body className={`${fira.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -25,9 +25,9 @@ export default async function Image({ params }: { params: Promise<{ code: string
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#0B0C11",
+          backgroundColor: "#F6F3E8",
           backgroundImage:
-            "radial-gradient(115% 55% at 85% -8%, rgba(255,122,51,0.35) 0%, transparent 62%), radial-gradient(95% 45% at -15% 14%, rgba(122,102,255,0.28) 0%, transparent 58%), linear-gradient(#141521 0%, #0E0F16 55%, #0B0C11 100%)",
+            "radial-gradient(90% 42% at 100% -8%, rgba(228,194,0,0.28) 0%, transparent 58%), linear-gradient(#FBF8F0 0%, #E7F2E6 100%)",
         }}
       >
         {/* Same gradient card and inset hairline the app uses. */}
@@ -37,20 +37,20 @@ export default async function Image({ params }: { params: Promise<{ code: string
             alignItems: "center",
             gap: 48,
             padding: 56,
-            backgroundImage: "linear-gradient(#1C1E2B, #171924)",
-            border: "1px solid #2C2F40",
+            backgroundImage: "linear-gradient(#FFFCF6, #F7F4EA)",
+            border: "1px solid #D5E3D2",
             borderRadius: 36,
             width: 1104,
             height: 534,
           }}
         >
           <img src={logoSrc} width={360} height={360} alt="" style={{ borderRadius: 180 }} />
-          <div style={{ display: "flex", flexDirection: "column", color: "#F2F1F6" }}>
+          <div style={{ display: "flex", flexDirection: "column", color: "#14331F" }}>
             <div style={{ fontSize: 58, fontWeight: 700 }}>CoffeeUG</div>
-            <div style={{ fontSize: 24, color: "#9A9EB2", marginTop: 8, letterSpacing: 4 }}>
+            <div style={{ fontSize: 24, color: "#4D6B58", marginTop: 8, letterSpacing: 4 }}>
               GROW · EXPORT · PROSPER
             </div>
-            <div style={{ marginTop: 28, fontSize: 22, color: "#9A9EB2" }}>
+            <div style={{ marginTop: 28, fontSize: 22, color: "#4D6B58" }}>
               Join with referral code
             </div>
             <div
@@ -58,13 +58,13 @@ export default async function Image({ params }: { params: Promise<{ code: string
                 fontSize: 52,
                 fontWeight: 700,
                 letterSpacing: 8,
-                color: "#FFA163",
+                color: "#146C34",
                 marginTop: 8,
               }}
             >
               {invite}
             </div>
-            <div style={{ marginTop: 24, fontSize: 22, color: "#DCDBE6" }}>
+            <div style={{ marginTop: 24, fontSize: 22, color: "#1B4332" }}>
               10% daily for 20 days · paid at 10PM
             </div>
           </div>

@@ -7,14 +7,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // The amber gradient with its glow — the only loud button on a screen.
-        default: "bg-success text-primary-foreground",
-        accent: "bg-leaf text-accent-foreground",
+        // Forest green is the action. Yellow is the highlight, used sparingly.
+        default: "bg-primary text-primary-foreground",
+        accent: "bg-gold text-[#14331F]",
         // Quiet buttons are a hairline of border over the page, never a fill.
         secondary:
           "text-secondary-foreground shadow-[inset_0_0_0_1px_var(--input)] hover:text-foreground",
         outline: "text-primary shadow-[inset_0_0_0_1px_var(--primary)]",
-        danger: "bg-success text-destructive-foreground",
+        danger: "bg-destructive text-destructive-foreground",
         ghost: "text-accent",
       },
       size: {
