@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { BRAND_LOGO_PATH, BRAND_NAME, BRAND_TAGLINE } from "@/lib/platform";
 import { cn } from "@/lib/utils";
@@ -5,11 +6,12 @@ import { cn } from "@/lib/utils";
 /** The CoffeeUG mark. Used in headers, auth screens, and share cards. */
 export function Logo({ size = 40, className }: { size?: number; className?: string }) {
   return (
-    <img
+    <Image
       src={BRAND_LOGO_PATH}
       alt={`${BRAND_NAME} logo`}
       width={size}
       height={size}
+      priority={size <= 48}
       className={cn("rounded-full object-cover", className)}
     />
   );

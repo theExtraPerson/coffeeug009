@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowDownToLine,
@@ -168,12 +169,13 @@ export default function HomePage() {
               body="Withdraw any time the window is open, or process another batch."
             />
           </ol>
-          <img
+          <Image
             src={WAYS_OF_EARNING_IMAGE}
             alt="The two ways of earning with CoffeeUG: 10% daily returns and referral commission"
             width={677}
             height={1015}
-            className="w-full border-t border-border"
+            sizes="(max-width: 640px) 100vw, 560px"
+            className="h-auto w-full border-t border-border"
           />
         </div>
       </section>
@@ -181,11 +183,12 @@ export default function HomePage() {
       <section className="mt-6 px-4">
         <SectionTitle>Processing plant</SectionTitle>
         <Link href="/plants#invest" className="app-card block overflow-hidden">
-          <img
+          <Image
             src={PROCESSING_PLANT_IMAGE}
             alt={PROCESSING_PLANT_NAME}
             width={1280}
             height={720}
+            sizes="(max-width: 640px) 100vw, 560px"
             className="h-52 w-full object-cover"
           />
           <div className="flex items-center justify-between gap-2 px-4 py-3">
@@ -260,12 +263,13 @@ function BrandCarousel() {
     <div className="brand-carousel mt-4" aria-hidden="true">
       <div className="brand-carousel-track">
         {slides.map((src, index) => (
-          <img
+          <Image
             key={`${src}-${index}`}
             src={src}
             alt=""
-            width={1200}
-            height={800}
+            width={544}
+            height={312}
+            sizes="272px"
             draggable={false}
             className="brand-carousel-slide"
           />

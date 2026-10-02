@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,11 +58,12 @@ export function PlantCard({
         </span>
       </div>
 
-      <img
+      <Image
         src={product.image_url || "/plants/robusta.svg"}
         alt={product.name}
         width={768}
         height={432}
+        sizes="(max-width: 640px) 100vw, 560px"
         className="h-40 w-full bg-muted object-cover"
       />
 

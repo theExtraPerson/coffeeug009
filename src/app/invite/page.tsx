@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { AppShell, SectionTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -59,12 +60,13 @@ export default function InvitePage() {
             </p>
           </div>
 
-          <img
+          <Image
             src={INVITE_IMAGE}
             alt={`${BRAND_NAME} invitation poster`}
             width={1086}
             height={1629}
-            className="w-full"
+            sizes="(max-width: 640px) 100vw, 560px"
+            className="h-auto w-full"
           />
 
           <div className="space-y-3 p-4">

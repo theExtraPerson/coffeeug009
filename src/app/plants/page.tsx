@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -90,11 +91,13 @@ export default function PlantsPage() {
           onClick={() => setStep("amount")}
           className="app-card block w-full overflow-hidden text-left"
         >
-          <img
+          <Image
             src={PROCESSING_PLANT_IMAGE}
             alt={PROCESSING_PLANT_NAME}
             width={1280}
             height={720}
+            sizes="(max-width: 640px) 100vw, 560px"
+            priority
             className="h-52 w-full object-cover"
           />
           <div className="flex items-center justify-between gap-2 px-4 py-3">

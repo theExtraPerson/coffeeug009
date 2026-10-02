@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -136,12 +137,13 @@ export default function TeamPage() {
         </div>
 
         <div className="app-card overflow-hidden">
-          <img
+          <Image
             src={INVEST_IN_COFFEE_IMAGE}
             alt="Invest in coffee and live a fruitful life"
             width={683}
             height={1024}
-            className="w-full"
+            sizes="(max-width: 640px) 100vw, 560px"
+            className="h-auto w-full"
           />
         </div>
       </div>

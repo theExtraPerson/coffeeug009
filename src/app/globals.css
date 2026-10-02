@@ -99,8 +99,14 @@ body {
     radial-gradient(95% 45% at -15% 14%, rgb(122 102 255 / 0.22) 0%, transparent 58%),
     radial-gradient(80% 40% at 50% 104%, rgb(74 214 232 / 0.14) 0%, transparent 60%),
     linear-gradient(#141521 0%, #0e0f16 55%, #0b0c11 100%);
-  background-attachment: fixed;
+  background-attachment: scroll;
   background-repeat: no-repeat;
+}
+
+@media (hover: hover) and (min-width: 768px) {
+  body {
+    background-attachment: fixed;
+  }
 }
 
 .font-display {
