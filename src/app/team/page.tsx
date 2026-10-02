@@ -11,12 +11,14 @@ import { formatMoney } from "@/lib/money";
 import { INVEST_IN_COFFEE_IMAGE, REFERRAL_RATES } from "@/lib/platform";
 
 export default function TeamPage() {
-  const { user } = useSessionUser();
-  const { data: team, isLoading } = useTeamStats(user?.id);
+  const { user, loading: sessionLoading } = useSessionUser();
+  const { data: team, isLoading, isError, error } = useTeamStats(user?.id);
   const [level, setLevel] = useState(1);
 
+  const waiting = sessionLoading || (!!user && isLoading);
   const levels = team?.levels ?? [];
-  const current = levels.find((l) => l.level === level);
+  const current = levels.find((entry) => Number(entry.level) === level);
+  const members = current?.members_list ?? [];
 
   return (
     <AppShell title="My team" back="/">
@@ -62,45 +64,52 @@ export default function TeamPage() {
           </div>
         ) : null}
 
-        {isLoading ? <p className="text-sm text-muted-foreground">Loading team…</p> : null}
+        {waiting ? <p className="text-sm text-muted-foreground">Loading team…</p> : null}
 
         <div className="space-y-2">
-          {(current?.members_list ?? []).map((member, index) => (
-            <div key={`${member.username ?? index}`} className="app-card flex items-center gap-3 p-3.5">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-primary">
-                {(member.name ?? member.username ?? "M").slice(0, 1).toUpperCase()}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">
-                  {member.name ?? member.username ?? "Member"}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {member.via_username ? `Via @${member.via_username} · ` : ""}
-                  code {member.referral_code ?? "—"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  Joined {formatKampalaDate(member.joined_at)}
-                </p>
+          {members.map((member, index) => {
+            const invested = Number(member.volume) > 0;
+            const rate = member.rate ?? current?.rate ?? 0;
+            return (
+              <div key={`${member.username ?? "member"}-${member.joined_at ?? index}`} className="app-card flex items-center gap-3 p-3.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-primary">
+                  {(member.name ?? member.username ?? "M").slice(0, 1).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {member.name ?? member.username ?? "Member"}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {member.via_username ? `Via @${member.via_username} · ` : ""}
+                    code {member.referral_code ?? "—"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Joined {formatKampalaDate(member.joined_at)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[10px] font-semibold text-muted-foreground">Invested</p>
+                  <p className="text-sm font-bold">{invested ? formatMoney(member.volume) : "—"}</p>
+                  <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                    Commission {rate}%
+                  </p>
+                  <p className={`text-sm font-bold ${invested ? "text-primary" : "text-muted-foreground"}`}>
+                    {invested ? formatMoney(member.earned) : "Awaiting"}
+                  </p>
+                </div>
               </div>
-              <div className="shrink-0 text-right">
-                {member.volume > 0 ? (
-                  <>
-                    <p className="text-sm font-bold text-primary">{formatMoney(member.earned)}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {member.rate ?? current?.rate ?? 0}% of {formatMoney(member.volume)}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-xs font-semibold text-muted-foreground">Awaiting</p>
-                    <p className="text-[10px] text-muted-foreground">investment</p>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
-          {!isLoading && !current?.members_list.length ? (
+          {!waiting && isError ? (
+            <div className="app-card space-y-2 p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                {error instanceof Error ? error.message : "Could not load your team."}
+              </p>
+            </div>
+          ) : null}
+
+          {!waiting && !isError && members.length === 0 ? (
             <div className="app-card space-y-3 p-4 text-center">
               <p className="text-sm text-muted-foreground">
                 No members on level {level} yet. Share your link to start building your team.

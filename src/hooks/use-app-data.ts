@@ -188,6 +188,38 @@ export function useEarnings(userId?: string) {
   });
 }
 
+function asAmount(value: unknown) {
+  const amount = Number(value ?? 0);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+/** Coerce the jsonb payload so string amounts still count as invested and earned. */
+function normalizeTeamStats(data: unknown): TeamStats {
+  const payload = (typeof data === "string" ? JSON.parse(data) : data) as TeamStats | null;
+  const levels = (payload?.levels ?? []).map((level) => ({
+    level: asAmount(level.level),
+    rate: asAmount(level.rate),
+    earned: asAmount(level.earned),
+    members: asAmount(level.members),
+    deposits: asAmount(level.deposits),
+    volume: asAmount(level.volume),
+    members_list: (level.members_list ?? []).map((member) => ({
+      ...member,
+      earned: asAmount(member.earned),
+      deposited: asAmount(member.deposited),
+      volume: asAmount(member.volume),
+      rate: member.rate == null ? undefined : asAmount(member.rate),
+    })),
+  }));
+  return {
+    total_members: asAmount(payload?.total_members),
+    total_volume: asAmount(payload?.total_volume),
+    total_deposits: asAmount(payload?.total_deposits),
+    total_earned: asAmount(payload?.total_earned),
+    levels,
+  };
+}
+
 export function useTeamStats(userId?: string) {
   return useQuery({
     queryKey: ["team-stats", userId],
@@ -196,7 +228,7 @@ export function useTeamStats(userId?: string) {
       const supabase = createClient();
       const { data, error } = await supabase.rpc("team_stats");
       if (error) throw error;
-      return (typeof data === "string" ? JSON.parse(data) : data) as TeamStats;
+      return normalizeTeamStats(data);
     },
   });
 }
