@@ -107,10 +107,8 @@ export default function AdminPage() {
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
-              tab === id
-                ? "bg-primary text-primary-foreground"
-                : "app-panel text-muted-foreground"
+            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-white transition-colors ${
+              tab === id ? "bg-primary shadow-[inset_0_0_0_2px_#ffffff]" : "bg-[#14331f]"
             }`}
           >
             <Icon className="size-3.5" />

@@ -40,7 +40,11 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const needsAuth = PROTECTED.some((p) => path === p || path.startsWith(`${p}/`));
+  // /invite is the member's own share screen. /invite/CODE is the public link
+  // a friend opens, and it has to keep the inviter's permanent code.
+  const publicInvite = /^\/invite\/[A-Za-z0-9]{4,10}$/.test(path);
+  const needsAuth =
+    !publicInvite && PROTECTED.some((p) => path === p || path.startsWith(`${p}/`));
 
   if (needsAuth && !user) {
     const target = request.nextUrl.clone();

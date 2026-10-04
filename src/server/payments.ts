@@ -16,13 +16,14 @@
 import { randomUUID } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { detectProvider, toMsisdn } from "@/lib/phone";
-import type { Payment } from "@/lib/types";
+import { PAYMENT_REVIEW_PREFIX, type Payment } from "@/lib/types";
 import {
   collectMoney,
   marzpayCallbackUrl,
   marzpayConfigured,
   sendMoney,
   transactionStatus,
+  type MarzSnapshot,
 } from "@/server/marzpay";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -32,18 +33,165 @@ export async function getPayment(admin: Admin, id: string): Promise<Payment | nu
   return (data as Payment | null) ?? null;
 }
 
-/** Find a payment from a webhook that may quote either reference. */
+/** Find a payment from a webhook that may quote any of the three references. */
 export async function findPaymentByReference(
   admin: Admin,
   reference: string,
 ): Promise<Payment | null> {
+  const trimmed = reference.trim();
+  if (!trimmed) return null;
+  for (const column of ["external_reference", "provider_tx_uuid", "provider_reference"] as const) {
+    const { data } = await admin.from("payments").select("*").eq(column, trimmed).maybeSingle();
+    if (data) return data as Payment;
+  }
+  return null;
+}
+
+/**
+ * Checks that must all pass before a payment is verified. A missing amount or
+ * phone is not a failure; a value that disagrees with the row is.
+ */
+export function paymentReviewIssues(payment: Payment, verdict: MarzSnapshot): string[] {
+  const issues: string[] = [];
+  const refs = verdict.references.map((ref) => ref.trim()).filter(Boolean);
+  const known = [payment.external_reference, payment.provider_tx_uuid, payment.provider_reference]
+    .filter((value): value is string => Boolean(value));
+  if (refs.length && !refs.some((ref) => known.includes(ref))) {
+    issues.push("the gateway reference does not match this payment");
+  }
+
+  if (verdict.kind) {
+    const expected = payment.type === "DEPOSIT" ? "collect" : "disburse";
+    if (verdict.kind !== expected) issues.push("the event type does not match this payment");
+  }
+
+  if (verdict.amount != null && Number.isFinite(verdict.amount)) {
+    const expectedAmount =
+      payment.type === "DEPOSIT" ? Number(payment.amount) : Number(payment.net_amount);
+    if (Math.round(verdict.amount) !== Math.round(expectedAmount)) {
+      issues.push(
+        `the amount ${Math.round(verdict.amount)} does not match ${Math.round(expectedAmount)}`,
+      );
+    }
+  }
+
+  if (verdict.phone) {
+    const incoming = toMsisdn(verdict.phone);
+    const stored = toMsisdn(payment.phone_number);
+    if (!incoming) issues.push("the phone number could not be read");
+    else if (stored && incoming !== stored) issues.push("the phone number does not match");
+  }
+
+  return issues;
+}
+
+/**
+ * Hold a payment for an admin. The member is not told: status stays open and
+ * the note is only visible in the admin queue.
+ */
+async function flagPaymentForReview(
+  admin: Admin,
+  payment: Payment,
+  reason: string,
+): Promise<Payment> {
+  const existing = payment.admin_note ?? "";
+  const note = (
+    !existing || existing.startsWith(PAYMENT_REVIEW_PREFIX)
+      ? `${PAYMENT_REVIEW_PREFIX}${reason}`
+      : existing
+  ).slice(0, 500);
+  if (note === existing && payment.status === "PROCESSING") return payment;
+
   const { data } = await admin
     .from("payments")
+    .update({
+      status: "PROCESSING",
+      admin_note: note,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", payment.id)
     .select("*")
-    .or(`external_reference.eq.${reference},provider_tx_uuid.eq.${reference}`)
-    .limit(1)
-    .maybeSingle();
-  return (data as Payment | null) ?? null;
+    .single();
+  return (data as Payment) ?? { ...payment, status: "PROCESSING", admin_note: note };
+}
+
+/**
+ * Verify a gateway result. Every check must pass before the payment is marked
+ * successful, the wallet is credited or debited, and the row is locked.
+ * Anything that does not check out stays open and asks an admin to look.
+ */
+export async function applyGatewayVerdict(
+  admin: Admin,
+  payment: Payment,
+  verdict: MarzSnapshot,
+): Promise<Payment> {
+  if (payment.status !== "PENDING" && payment.status !== "PROCESSING") return payment;
+
+  // A withdrawal is never verified from the gateway until an admin has approved
+  // a MarzPay payout. Manual withdrawals are settled only when an admin marks
+  // them paid. A gateway problem after approval goes back to the queue.
+  if (payment.type === "WITHDRAWAL") {
+    if (payment.mode !== "MARZPAY" || !payment.reviewed_by) return payment;
+    if (verdict.missing || verdict.status === "PENDING") return payment;
+
+    const issues = paymentReviewIssues(payment, verdict);
+    if (verdict.status === "SUCCESSFUL" && issues.length === 0) {
+      if (payment.admin_note?.startsWith(PAYMENT_REVIEW_PREFIX)) {
+        await admin
+          .from("payments")
+          .update({ admin_note: null, updated_at: new Date().toISOString() })
+          .eq("id", payment.id);
+      }
+      await settlePayment(admin, payment.id, true, { providerTx: verdict.providerTx });
+      return (await getPayment(admin, payment.id)) ?? payment;
+    }
+
+    const reason = (
+      issues.join("; ") ||
+      (verdict.description
+        ? `MarzPay reported a failure: ${verdict.description}`
+        : "MarzPay reported a failure")
+    ).slice(0, 500);
+    const { data } = await admin
+      .from("payments")
+      .update({
+        status: "PENDING",
+        failure_reason: reason,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", payment.id)
+      .select("*")
+      .single();
+    return (data as Payment) ?? payment;
+  }
+
+  if (verdict.missing) {
+    return flagPaymentForReview(admin, payment, "MarzPay has no record for this payment.");
+  }
+  if (verdict.status === "PENDING") return payment;
+
+  const issues = paymentReviewIssues(payment, verdict);
+  if (verdict.status === "FAILED") {
+    issues.push(
+      verdict.description
+        ? `MarzPay reported a failure: ${verdict.description}`
+        : "MarzPay reported a failure",
+    );
+  }
+  if (issues.length || verdict.status !== "SUCCESSFUL") {
+    const reason = issues.join("; ") || "The gateway result could not be verified.";
+    return flagPaymentForReview(admin, payment, reason);
+  }
+
+  if (payment.admin_note?.startsWith(PAYMENT_REVIEW_PREFIX)) {
+    await admin
+      .from("payments")
+      .update({ admin_note: null, updated_at: new Date().toISOString() })
+      .eq("id", payment.id);
+  }
+
+  await settlePayment(admin, payment.id, true, { providerTx: verdict.providerTx });
+  return (await getPayment(admin, payment.id)) ?? payment;
 }
 
 /**
@@ -186,35 +334,59 @@ export async function createDeposit(
   }
 }
 
-/* ---------- withdrawals (automatic or admin-approved) ---------- */
+/* ---------- withdrawals (always admin-approved) ---------- */
 
 /**
- * Hand a PENDING withdrawal to MarzPay. The reservation already exists, so a
- * gateway rejection releases it and the member's balance is untouched.
+ * Send an approved MarzPay withdrawal. Refuses unless an admin has approved it,
+ * and never runs for a manual payout. The member's choice of channel is left
+ * unchanged: a gateway error keeps the MarzPay flag and returns the row to the queue.
  */
-export async function dispatchWithdrawal(admin: Admin, paymentId: string) {
+export async function dispatchWithdrawal(
+  admin: Admin,
+  paymentId: string,
+  options: { approvedBy?: string } = {},
+) {
   const payment = await getPayment(admin, paymentId);
   if (!payment) throw new Error("Withdrawal not found.");
   if (payment.type !== "WITHDRAWAL") throw new Error("Not a withdrawal.");
+  if (payment.mode !== "MARZPAY") {
+    throw new Error("This withdrawal is manual. Send the money yourself, then mark it paid.");
+  }
   if (payment.status !== "PENDING") return payment;
 
-  if (!marzpayConfigured()) {
-    // Fall back to the manual queue rather than failing the member's request.
-    const { data } = await admin
-      .from("payments")
-      .update({ mode: "MANUAL", updated_at: new Date().toISOString() })
-      .eq("id", payment.id)
-      .select("*")
-      .single();
-    return (data as Payment) ?? payment;
+  const approver = payment.reviewed_by ?? options.approvedBy;
+  if (!approver) {
+    throw new Error("An admin must approve this withdrawal before MarzPay can send it.");
   }
+  if (!marzpayConfigured()) {
+    throw new Error("MarzPay is not configured. Pay this withdrawal manually, or reject it.");
+  }
+
+  const now = new Date().toISOString();
+  const { data: claimed, error: claimError } = await admin
+    .from("payments")
+    .update({
+      reviewed_by: approver,
+      reviewed_at: payment.reviewed_at ?? now,
+      status: "PROCESSING",
+      failure_reason: null,
+      updated_at: now,
+    })
+    .eq("id", payment.id)
+    .eq("status", "PENDING")
+    .select("*")
+    .maybeSingle();
+  if (claimError) throw new Error(claimError.message);
+  if (!claimed) return (await getPayment(admin, payment.id)) ?? payment;
+
+  let current = claimed as Payment;
 
   try {
     const result = await sendMoney({
       // The member pays the withdrawal fee, so only the net amount is sent out.
-      amount: Math.round(payment.net_amount),
-      phone: payment.phone_number,
-      reference: payment.external_reference,
+      amount: Math.round(current.net_amount),
+      phone: current.phone_number,
+      reference: current.external_reference,
       description: "CoffeeUG withdrawal",
       callbackUrl: marzpayCallbackUrl(),
     });
@@ -223,35 +395,52 @@ export async function dispatchWithdrawal(admin: Admin, paymentId: string) {
       .update({
         provider_tx_uuid: result.providerTxUuid ?? null,
         provider_reference: result.providerReference ?? null,
-        provider: result.network ?? payment.provider,
-        status: result.status === "PENDING" ? "PROCESSING" : payment.status,
+        provider: result.network ?? current.provider,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", payment.id)
+      .eq("id", current.id)
       .select("*")
       .single();
+    if (data) current = data as Payment;
 
     if (result.status === "SUCCESSFUL") {
-      await settlePayment(admin, payment.id, true, { providerTx: result.providerTxUuid });
-    } else if (result.status === "FAILED") {
-      await settlePayment(admin, payment.id, false, { reason: "MarzPay rejected the payout." });
+      return applyGatewayVerdict(admin, current, {
+        status: "SUCCESSFUL",
+        references: [current.external_reference, result.providerTxUuid, result.providerReference].filter(
+          (value): value is string => Boolean(value),
+        ),
+        kind: "disburse",
+        providerTx: result.providerTxUuid,
+      });
     }
-    return (data as Payment) ?? payment;
+    if (result.status === "FAILED") {
+      const { data: held } = await admin
+        .from("payments")
+        .update({
+          status: "PENDING",
+          failure_reason: "MarzPay rejected the payout.",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", current.id)
+        .select("*")
+        .single();
+      return (held as Payment) ?? current;
+    }
+    return current;
   } catch (err) {
     const reason = err instanceof Error ? err.message : "MarzPay error";
-    // Leave the money reserved and let an admin finish it by hand instead of
-    // silently dropping the request.
     const { data } = await admin
       .from("payments")
       .update({
-        mode: "MANUAL",
+        status: "PENDING",
         failure_reason: reason,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", payment.id)
+      .eq("id", current.id)
+      .eq("status", "PROCESSING")
       .select("*")
       .single();
-    return (data as Payment) ?? payment;
+    return (data as Payment) ?? current;
   }
 }
 
@@ -259,21 +448,19 @@ export async function dispatchWithdrawal(admin: Admin, paymentId: string) {
 
 export async function pollPayment(admin: Admin, payment: Payment): Promise<Payment> {
   if (payment.status !== "PENDING" && payment.status !== "PROCESSING") return payment;
-  // Manual payouts are settled by a person, never by asking the gateway.
-  if (payment.type === "WITHDRAWAL" && payment.mode === "MANUAL") return payment;
+  // Manual payouts, and MarzPay payouts still waiting for an admin, are never
+  // asked of the gateway.
+  if (payment.type === "WITHDRAWAL") {
+    if (payment.mode !== "MARZPAY" || !payment.reviewed_by || !payment.provider_tx_uuid) {
+      return payment;
+    }
+  }
   if (!marzpayConfigured()) return payment;
 
   const reference = payment.provider_tx_uuid ?? payment.external_reference;
-  const status = await transactionStatus(
+  const snapshot = await transactionStatus(
     reference,
     payment.type === "DEPOSIT" ? "collect" : "disburse",
   );
-  if (status === "SUCCESSFUL") {
-    await settlePayment(admin, payment.id, true);
-  } else if (status === "FAILED") {
-    await settlePayment(admin, payment.id, false, { reason: "MarzPay reported a failure." });
-  } else {
-    return payment;
-  }
-  return (await getPayment(admin, payment.id)) ?? payment;
+  return applyGatewayVerdict(admin, payment, snapshot);
 }

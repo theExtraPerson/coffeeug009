@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { detectProvider, toMsisdn } from "@/lib/phone";
-import { dispatchWithdrawal } from "@/server/payments";
+import type { PaymentMode } from "@/lib/types";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
 
-  let body: { amount?: unknown; phone?: unknown };
+  let body: { amount?: unknown; phone?: unknown; mode?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
 
   const amount = Math.round(Number(body.amount));
   const msisdn = toMsisdn(String(body.phone ?? ""));
+  const mode: PaymentMode = body.mode === "MANUAL" ? "MANUAL" : "MARZPAY";
   if (!Number.isFinite(amount) || amount <= 0) {
     return NextResponse.json({ error: "Enter an amount." }, { status: 400 });
   }
@@ -30,58 +31,56 @@ export async function POST(request: Request) {
     );
   }
 
-  // The RPC runs as the signed-in member: it validates the window, the limits,
-  // and the available balance, then reserves the funds by creating the row.
-  const { data, error } = await supabase.rpc("request_withdrawal", {
+  // The RPC reserves the funds. It does not send money. MarzPay is called only
+  // after an admin approves a MarzPay withdrawal.
+  let createdResult = await supabase.rpc("request_withdrawal", {
     _amount: amount,
     _phone: msisdn,
     _provider: detectProvider(msisdn),
     _reference: null,
+    _mode: mode,
   });
-  if (error) {
+  if (
+    createdResult.error &&
+    /schema cache|could not find the function|pgrst202/i.test(createdResult.error.message)
+  ) {
+    createdResult = await supabase.rpc("request_withdrawal", {
+      _amount: amount,
+      _phone: msisdn,
+      _provider: detectProvider(msisdn),
+      _reference: null,
+    });
+  }
+  if (createdResult.error) {
     return NextResponse.json(
-      { error: error.message.replace(/^.*?:\s*/, "") },
+      { error: createdResult.error.message.replace(/^.*?:\s*/, "") },
       { status: 400 },
     );
   }
 
-  const created = data as { payment_id: string; mode: string; fee: number; net: number };
+  const created = createdResult.data as {
+    payment_id: string;
+    mode: string;
+    fee: number;
+    net: number;
+  };
 
-  if (created.mode === "MARZPAY") {
-    try {
-      const admin = createAdminClient();
-      const payment = await dispatchWithdrawal(admin, created.payment_id);
-      return NextResponse.json({
-        id: created.payment_id,
-        status: payment.status,
-        mode: payment.mode,
-        fee: Number(created.fee),
-        net: Number(created.net),
-        message:
-          payment.mode === "MANUAL"
-            ? "Your withdrawal is queued for review and will be sent shortly."
-            : "Withdrawal sent. The money will reach your phone shortly.",
-      });
-    } catch (err) {
-      // The reservation stands; an admin can still complete it.
-      return NextResponse.json({
-        id: created.payment_id,
-        status: "PENDING",
-        mode: "MANUAL",
-        fee: Number(created.fee),
-        net: Number(created.net),
-        message: "Your withdrawal is queued for review.",
-        warning: err instanceof Error ? err.message : undefined,
-      });
-    }
-  }
+  const admin = createAdminClient();
+  await admin
+    .from("payments")
+    .update({ mode, updated_at: new Date().toISOString() })
+    .eq("id", created.payment_id)
+    .eq("status", "PENDING");
 
   return NextResponse.json({
     id: created.payment_id,
     status: "PENDING",
-    mode: "MANUAL",
+    mode,
     fee: Number(created.fee),
     net: Number(created.net),
-    message: "Your withdrawal is queued for review and will be sent shortly.",
+    message:
+      mode === "MANUAL"
+        ? "Request received. An admin will send the money to your phone."
+        : "Request received. An admin will approve it before MarzPay sends the money.",
   });
 }

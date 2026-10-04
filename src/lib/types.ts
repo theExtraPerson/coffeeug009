@@ -67,6 +67,9 @@ export type PaymentType = "DEPOSIT" | "WITHDRAWAL";
 export type PaymentMode = "MARZPAY" | "MANUAL";
 export type PaymentStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "CANCELLED";
 
+/** Admin-only note written when a payment cannot be verified automatically. */
+export const PAYMENT_REVIEW_PREFIX = "Needs check: ";
+
 export type Payment = {
   id: string;
   user_id: string;

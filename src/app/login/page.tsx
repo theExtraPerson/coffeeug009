@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "@/components/icons";
 import { AuthHero } from "@/components/auth-hero";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
-import { captureInviteFromSearch, rememberInvite } from "@/lib/invite";
+import { captureInviteFromSearch, readRememberedInvite, rememberInvite } from "@/lib/invite";
 import { normalizeUsername, usernameToEmail } from "@/lib/username";
 
 export default function LoginPage() {
@@ -28,12 +28,15 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [invite, setInvite] = useState("");
 
   // Keep an invite code that arrived on a login link, so it still applies if
   // the visitor turns out to be new and taps through to register.
   useEffect(() => {
-    const captured = captureInviteFromSearch(search);
-    if (captured) rememberInvite(captured);
+    const captured = captureInviteFromSearch(search) || readRememberedInvite();
+    if (!captured) return;
+    rememberInvite(captured);
+    setInvite(captured);
   }, [search]);
 
   async function onSubmit(event: React.FormEvent) {
@@ -129,7 +132,7 @@ function LoginForm() {
           </form>
 
           <Link
-            href="/register"
+            href={invite ? `/register?ref=${invite}` : "/register"}
             className="mt-6 block text-center text-sm font-semibold text-accent"
           >
             Create an account

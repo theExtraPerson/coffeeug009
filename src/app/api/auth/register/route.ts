@@ -10,11 +10,13 @@ async function recordInvite(admin: SupabaseClient, userId: string, invite: strin
 
   const { data: referrer } = await admin
     .from("profiles")
-    .select("id")
-    .eq("referral_code", invite)
+    .select("id, referral_code")
+    .ilike("referral_code", invite)
     .neq("id", userId)
+    .limit(1)
     .maybeSingle();
   if (!referrer) return;
+  const persistentCode = normalizeInviteCode(referrer.referral_code) || invite;
 
   const { data: profile } = await admin
     .from("profiles")
@@ -24,7 +26,7 @@ async function recordInvite(admin: SupabaseClient, userId: string, invite: strin
   if (profile?.referred_by && profile.referred_by !== referrer.id) return;
 
   await admin.from("referrals").upsert(
-    { referrer_id: referrer.id, referee_id: userId, referral_code: invite },
+    { referrer_id: referrer.id, referee_id: userId, referral_code: persistentCode },
     { onConflict: "referee_id", ignoreDuplicates: true },
   );
 

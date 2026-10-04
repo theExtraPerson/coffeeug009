@@ -66,10 +66,8 @@ export function AdminOrders() {
             key={f.id || "all"}
             type="button"
             onClick={() => setFilter(f.id)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              filter === f.id
-                ? "bg-primary text-primary-foreground"
-                : "app-panel text-muted-foreground"
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold text-white ${
+              filter === f.id ? "bg-primary shadow-[inset_0_0_0_2px_#ffffff]" : "bg-[#14331f]"
             }`}
           >
             {f.label}

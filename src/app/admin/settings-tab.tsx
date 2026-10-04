@@ -119,12 +119,10 @@ export function AdminSettings() {
             onChange={(v) => patch({ withdraw_end: v })}
           />
         </Row>
-        <Toggle
-          label="Send automatically through MarzPay"
-          hint="Off means every withdrawal waits in the manual queue."
-          value={draft.withdraw_auto}
-          onChange={(v) => patch({ withdraw_auto: v })}
-        />
+        <p className="text-xs text-muted-foreground">
+          Every withdrawal waits for an admin. A MarzPay request is sent only after
+          approval. A manual request is paid by the admin directly.
+        </p>
       </Card>
 
       <Card title="Links & copy">

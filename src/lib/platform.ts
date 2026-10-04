@@ -22,7 +22,7 @@ export const PAYOUT_HOUR = 22;
 export const REFERRAL_RATES = [6, 1] as const;
 
 export const SIGNUP_BONUS = 500;
-export const MIN_DEPOSIT = 1000;
+export const MIN_DEPOSIT = 5000;
 export const MAX_DEPOSIT = 10_000_000;
 export const MIN_WITHDRAW = 3000;
 export const MAX_WITHDRAW = 5_000_000;

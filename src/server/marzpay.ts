@@ -104,8 +104,33 @@ function record(value: unknown): Record<string, unknown> {
 
 /** Money values arrive as { formatted, raw, currency }; `raw` is authoritative. */
 function rawAmount(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.round(value);
+  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
+    return Math.round(Number(value));
+  }
   const raw = record(value).raw;
-  return typeof raw === "number" ? Math.round(raw) : undefined;
+  if (typeof raw === "number" && Number.isFinite(raw)) return Math.round(raw);
+  if (typeof raw === "string" && raw.trim() && Number.isFinite(Number(raw))) {
+    return Math.round(Number(raw));
+  }
+  return undefined;
+}
+
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
+function uniqueStrings(...values: unknown[]): string[] {
+  const out: string[] = [];
+  for (const value of values) {
+    if (typeof value === "string" && value.trim() && !out.includes(value.trim())) {
+      out.push(value.trim());
+    }
+  }
+  return out;
 }
 
 /** "mtn" / "mtnuganda" / "airtel" -> our label. */
@@ -123,19 +148,78 @@ export function mapMarzStatus(status: unknown): MarzStatus {
   return "PENDING";
 }
 
-/**
- * Read a status out of either shape the API uses: a status-poll body, or a
- * callback-shaped body whose verdict is in `event_type`
- * ("collection.completed" -> "completed").
- */
-function extractStatus(body: Record<string, unknown>): string {
-  const direct = record(body.data ?? body);
-  const txn = record(direct.transaction);
-  if (typeof txn.status === "string" && txn.status) return txn.status;
-  if (typeof direct.event_type === "string" && direct.event_type) {
-    return direct.event_type.split(".").pop() ?? "";
+export interface MarzSnapshot {
+  status: MarzStatus;
+  references: string[];
+  amount?: number;
+  phone?: string;
+  kind?: MarzKind;
+  providerTx?: string;
+  description?: string;
+  /** The gateway has no transaction for the reference we asked about. */
+  missing?: boolean;
+}
+
+function inferKind(
+  eventType: string,
+  collection: Record<string, unknown>,
+  disbursement: Record<string, unknown>,
+): MarzKind | undefined {
+  const event = eventType.toLowerCase();
+  if (event.includes("collect")) return "collect";
+  if (event.includes("disburse") || event.includes("send") || event.includes("payout")) {
+    return "disburse";
   }
-  return "";
+  const hasCollection = Object.keys(collection).length > 0;
+  const hasDisbursement = Object.keys(disbursement).length > 0;
+  if (hasCollection && !hasDisbursement) return "collect";
+  if (hasDisbursement && !hasCollection) return "disburse";
+  return undefined;
+}
+
+/**
+ * One shape for both a status poll and a webhook. Direct callbacks start at
+ * `event_type`; dashboard webhooks wrap that same body under `data`.
+ */
+export function readMarzSnapshot(raw: unknown): MarzSnapshot {
+  const outer = record(raw);
+  const body = outer.event_type ? outer : record(outer.data);
+  const eventType = firstString(body.event_type, outer.event_type) ?? "";
+  const transaction = record(body.transaction);
+  const collection = record(body.collection);
+  const disbursement = record(body.disbursement ?? body.withdrawal);
+  const statusText =
+    firstString(transaction.status) ??
+    (eventType.includes(".") ? eventType.split(".").pop() : undefined) ??
+    "";
+
+  return {
+    status: mapMarzStatus(statusText),
+    references: uniqueStrings(
+      transaction.reference,
+      transaction.provider_reference,
+      transaction.uuid,
+      collection.reference,
+      disbursement.reference,
+      disbursement.provider_reference,
+    ),
+    amount: rawAmount(collection.amount ?? disbursement.amount ?? transaction.amount ?? body.amount),
+    phone: firstString(
+      collection.phone_number,
+      collection.phone,
+      disbursement.phone_number,
+      disbursement.phone,
+      transaction.phone_number,
+      transaction.phone,
+    ),
+    kind: inferKind(eventType, collection, disbursement),
+    providerTx: firstString(
+      collection.provider_transaction_id,
+      disbursement.provider_transaction_id,
+      transaction.uuid,
+    ),
+    description: firstString(transaction.description, body.message, outer.message),
+  };
 }
 
 export interface MarzCallInput {
@@ -204,16 +288,24 @@ export async function sendMoney(input: MarzCallInput): Promise<MarzResult> {
 }
 
 /** Status poll, used when a webhook is late or was delivered only once. */
-export async function transactionStatus(uuid: string, kind: MarzKind): Promise<MarzStatus> {
+export async function transactionStatus(uuid: string, kind: MarzKind): Promise<MarzSnapshot> {
   try {
     const body = await marzFetch(
       kind === "collect" ? `/collect-money/${uuid}` : `/send-money/${uuid}`,
     );
-    return mapMarzStatus(extractStatus(body as Record<string, unknown>));
+    const snapshot = readMarzSnapshot(body);
+    if (!snapshot.kind) snapshot.kind = kind;
+    if (uuid && !snapshot.references.includes(uuid)) {
+      snapshot.references = [uuid, ...snapshot.references];
+    }
+    return snapshot;
   } catch (err) {
-    if (err instanceof MarzPayError && err.httpStatus === 404) return "FAILED";
+    if (err instanceof MarzPayError && err.httpStatus === 404) {
+      // A missing record is not proof the member never paid.
+      return { status: "PENDING", references: uuid ? [uuid] : [], missing: true, kind };
+    }
     // A transient error must never finalize a payment.
-    return "PENDING";
+    return { status: "PENDING", references: [], kind };
   }
 }
 

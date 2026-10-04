@@ -104,7 +104,10 @@ export function InviteLanding({
               Create my account
             </Button>
           </Link>
-          <Link href="/login" className="block text-center text-sm font-semibold text-accent">
+          <Link
+            href={code ? `/login?ref=${code}` : "/login"}
+            className="block text-center text-sm font-semibold text-accent"
+          >
             I already have an account
           </Link>
           <Link href="/about" className="block text-center text-xs text-muted-foreground">

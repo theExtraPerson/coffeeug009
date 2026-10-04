@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { formatKampala } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
 import { normalizePhone } from "@/lib/phone";
-import type { Payment } from "@/lib/types";
+import { PAYMENT_REVIEW_PREFIX, type Payment } from "@/lib/types";
 
 type Row = Payment & {
   member: { id: string; username: string | null; full_name: string | null; phone: string | null } | null;
@@ -56,6 +56,8 @@ export function AdminPayments({
     void load();
   }, [load]);
 
+  const isWithdrawal = type === "WITHDRAWAL";
+
   async function review(id: string, action: "approve" | "reject" | "send" | "note") {
     setBusy(id);
     const res = await fetch("/api/admin/payments", {
@@ -63,7 +65,12 @@ export function AdminPayments({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paymentId: id, action, note: notes[id] }),
     });
-    const data = (await res.json()) as { error?: string; status?: string; mode?: string };
+    const data = (await res.json()) as {
+      error?: string;
+      status?: string;
+      mode?: string;
+      failureReason?: string | null;
+    };
     setBusy(null);
     if (!res.ok) {
       toast.error(data.error ?? "Could not update this payment");
@@ -71,18 +78,20 @@ export function AdminPayments({
     }
     toast.success(
       action === "approve"
-        ? "Approved and credited"
+        ? isWithdrawal
+          ? "Marked paid"
+          : "Approved and credited"
         : action === "reject"
           ? "Rejected, funds released"
           : action === "send"
-            ? `Sent to MarzPay (${data.status ?? "queued"})`
+            ? data.failureReason
+              ? "MarzPay did not send it. You can retry or mark it paid."
+              : "Approved. MarzPay is sending the money."
             : "Note saved",
     );
     await load();
     onChanged();
   }
-
-  const isWithdrawal = type === "WITHDRAWAL";
 
   return (
     <div className="space-y-3">
@@ -92,10 +101,8 @@ export function AdminPayments({
             key={f.id || "all"}
             type="button"
             onClick={() => setFilter(f.id)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              filter === f.id
-                ? "bg-primary text-primary-foreground"
-                : "app-panel text-muted-foreground"
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold text-white ${
+              filter === f.id ? "bg-primary shadow-[inset_0_0_0_2px_#ffffff]" : "bg-[#14331f]"
             }`}
           >
             {f.label}
@@ -138,16 +145,27 @@ export function AdminPayments({
                     fee {formatMoney(row.fee)} · net {formatMoney(row.net_amount)}
                   </p>
                 ) : null}
-                <span className={`chip mt-1 ${STATUS_CHIP[row.status] ?? "chip-off"}`}>
-                  {row.status}
-                </span>
+                <div className="mt-1 flex flex-wrap justify-end gap-1">
+                  {isWithdrawal ? (
+                    <span className={`chip ${row.mode === "MANUAL" ? "chip-accent" : "chip-live"}`}>
+                      {row.mode === "MANUAL" ? "MANUAL" : "MARZPAY"}
+                    </span>
+                  ) : null}
+                  <span className={`chip ${STATUS_CHIP[row.status] ?? "chip-off"}`}>
+                    {row.status}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {row.failure_reason ? (
+            {row.failure_reason && row.status !== "SUCCESS" ? (
               <p className="alert-bad px-3 py-2 text-xs">{row.failure_reason}</p>
             ) : null}
-            {row.admin_note && !open ? (
+            {row.admin_note?.startsWith(PAYMENT_REVIEW_PREFIX) ? (
+              <p className="rounded-[13px] bg-[#e4c200]/35 px-3 py-2 text-xs font-semibold text-[#14331f]">
+                {row.admin_note}
+              </p>
+            ) : row.admin_note && !open ? (
               <p className="app-panel px-3 py-2 text-xs text-muted-foreground">
                 Note: {row.admin_note}
               </p>
@@ -162,25 +180,30 @@ export function AdminPayments({
               <>
                 <Input
                   placeholder="Admin note (shown on rejection)"
-                  value={notes[row.id] ?? row.admin_note ?? ""}
+                  value={
+                    notes[row.id] ??
+                    (row.admin_note?.startsWith(PAYMENT_REVIEW_PREFIX) ? "" : row.admin_note ?? "")
+                  }
                   onChange={(e) => setNotes((n) => ({ ...n, [row.id]: e.target.value }))}
                 />
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    disabled={busy === row.id}
-                    onClick={() => review(row.id, "approve")}
-                  >
-                    {isWithdrawal ? "Mark paid" : "Credit wallet"}
-                  </Button>
-                  {isWithdrawal ? (
+                  {isWithdrawal && row.mode === "MARZPAY" ? (
                     <Button
                       size="sm"
                       variant="accent"
-                      disabled={busy === row.id}
+                      disabled={busy === row.id || row.status !== "PENDING"}
                       onClick={() => review(row.id, "send")}
                     >
-                      Send via MarzPay
+                      Approve & send
+                    </Button>
+                  ) : null}
+                  {!isWithdrawal || row.mode === "MANUAL" || row.failure_reason ? (
+                    <Button
+                      size="sm"
+                      disabled={busy === row.id}
+                      onClick={() => review(row.id, "approve")}
+                    >
+                      {isWithdrawal ? "Mark paid" : "Credit wallet"}
                     </Button>
                   ) : null}
                   <Button

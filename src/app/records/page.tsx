@@ -138,9 +138,12 @@ function PaymentList({
             <StatusPill status={row.status} mode={row.mode} />
           </div>
 
-          {showFee && Number(row.fee) > 0 ? (
+          {showFee ? (
             <p className="mt-2 text-xs text-muted-foreground">
-              Fee {formatMoney(row.fee)} · you receive {formatMoney(row.net_amount)}
+              {row.mode === "MANUAL" ? "Manual payout" : "MarzPay payout"}
+              {Number(row.fee) > 0
+                ? ` · fee ${formatMoney(row.fee)} · you receive ${formatMoney(row.net_amount)}`
+                : ""}
             </p>
           ) : null}
 
@@ -165,10 +168,12 @@ function StatusPill({ status, mode }: { status: string; mode: string }) {
   const label =
     status === "SUCCESS"
       ? "Paid"
-      : status === "PENDING" || status === "PROCESSING"
-        ? mode === "MANUAL"
-          ? "In review"
-          : "Processing"
+      : status === "PENDING"
+        ? "In review"
+        : status === "PROCESSING"
+          ? mode === "MANUAL"
+            ? "In review"
+            : "Sending"
         : status === "FAILED"
           ? "Failed"
           : "Cancelled";

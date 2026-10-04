@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, jsonError } from "@/lib/admin-auth";
-import { dispatchWithdrawal, settlePayment } from "@/server/payments";
+import { dispatchWithdrawal, getPayment, settlePayment } from "@/server/payments";
 
 /** Deposit and withdrawal queues, newest first. */
 export async function GET(request: Request) {
@@ -42,10 +42,10 @@ export async function GET(request: Request) {
 /**
  * Admin review of a payment.
  *
- *   action "approve" on a MANUAL withdrawal settles the ledger debit.
- *   action "send"    hands a held withdrawal to MarzPay instead of paying by hand.
+ *   action "approve" on a manual withdrawal settles the ledger after the admin
+ *                    has sent the money. On a deposit it credits the wallet.
+ *   action "send"    approves a MarzPay withdrawal and only then calls MarzPay.
  *   action "reject"  releases the reservation and returns the money.
- *   action "approve" on a deposit credits a payment confirmed out of band.
  *   action "note"    records an admin note without changing the status.
  */
 export async function POST(request: Request) {
@@ -71,8 +71,21 @@ export async function POST(request: Request) {
 
   try {
     if (body.action === "send") {
-      const payment = await dispatchWithdrawal(admin, body.paymentId);
-      return NextResponse.json({ ok: true, status: payment.status, mode: payment.mode });
+      const payment = await dispatchWithdrawal(admin, body.paymentId, { approvedBy: user.id });
+      return NextResponse.json({
+        ok: true,
+        status: payment.status,
+        mode: payment.mode,
+        failureReason: payment.failure_reason,
+      });
+    }
+
+    if (body.action === "approve") {
+      const existing = await getPayment(admin, body.paymentId);
+      if (!existing) return jsonError("Payment not found", 404);
+      if (existing.type === "WITHDRAWAL" && existing.mode === "MARZPAY" && !existing.failure_reason) {
+        return jsonError("This withdrawal is flagged MarzPay. Approve it so MarzPay can send the money.");
+      }
     }
 
     const result = await settlePayment(admin, body.paymentId, body.action === "approve", {

@@ -31,6 +31,7 @@ export default function WithdrawPage() {
 
   const [amount, setAmount] = useState("");
   const [phone, setPhone] = useState("");
+  const [method, setMethod] = useState<"MARZPAY" | "MANUAL">("MARZPAY");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -73,7 +74,11 @@ export default function WithdrawPage() {
       const res = await fetch("/api/payments/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: requested, phone: normalizePhone(phone) }),
+        body: JSON.stringify({
+          amount: requested,
+          phone: normalizePhone(phone),
+          mode: method,
+        }),
       });
       const data = (await res.json()) as { message?: string; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Withdrawal failed");
@@ -152,6 +157,34 @@ export default function WithdrawPage() {
             </p>
           </div>
 
+          <div className="space-y-2">
+            <Label>How you get paid</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ["MARZPAY", "MarzPay"],
+                  ["MANUAL", "Manual"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setMethod(id)}
+                  className={`rounded-full px-3 py-2 text-xs font-semibold text-white ${
+                    method === id ? "bg-primary shadow-[inset_0_0_0_2px_#ffffff]" : "bg-[#14331f]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {method === "MANUAL"
+                ? "An admin reviews this and sends the money to your phone."
+                : "An admin approves this first. MarzPay sends the money only after that."}
+            </p>
+          </div>
+
           {/* Spelled out before they commit, so the fee is never a surprise. */}
           <div className="app-panel space-y-1.5 p-3 text-sm">
             <Row label="You request" value={formatMoney(value)} />
@@ -167,7 +200,7 @@ export default function WithdrawPage() {
             size="lg"
             className="h-12 w-full"
           >
-            {busy ? "Submitting…" : windowOpen ? "Withdraw" : "Outside withdrawal hours"}
+            {busy ? "Submitting…" : windowOpen ? "Request withdrawal" : "Outside withdrawal hours"}
           </Button>
         </div>
       </div>
