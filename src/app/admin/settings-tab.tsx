@@ -120,8 +120,8 @@ export function AdminSettings() {
           />
         </Row>
         <p className="text-xs text-muted-foreground">
-          Every withdrawal waits for an admin. A MarzPay request is sent only after
-          approval. A manual request is paid by the admin directly.
+          Every withdrawal waits in the admin queue. The admin chooses MarzPay or a
+          manual payout for each request.
         </p>
       </Card>
 

@@ -140,10 +140,14 @@ function PaymentList({
 
           {showFee ? (
             <p className="mt-2 text-xs text-muted-foreground">
-              {row.mode === "MANUAL" ? "Manual payout" : "MarzPay payout"}
-              {Number(row.fee) > 0
-                ? ` · fee ${formatMoney(row.fee)} · you receive ${formatMoney(row.net_amount)}`
+              {row.status === "SUCCESS" || row.status === "PROCESSING"
+                ? row.mode === "MANUAL"
+                  ? "Manual payout · "
+                  : "MarzPay payout · "
                 : ""}
+              {Number(row.fee) > 0
+                ? `fee ${formatMoney(row.fee)} · you receive ${formatMoney(row.net_amount)}`
+                : `you receive ${formatMoney(row.net_amount)}`}
             </p>
           ) : null}
 

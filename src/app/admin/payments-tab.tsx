@@ -40,6 +40,7 @@ export function AdminPayments({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [methodChoice, setMethodChoice] = useState<Record<string, "MARZPAY" | "MANUAL">>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -120,6 +121,8 @@ export function AdminPayments({
 
       {rows.map((row) => {
         const open = row.status === "PENDING" || row.status === "PROCESSING";
+        const payout = methodChoice[row.id] ?? "MARZPAY";
+        const phone = normalizePhone(row.phone_number) || row.phone_number;
         return (
           <div key={row.id} className="app-card space-y-3 p-4">
             <div className="flex items-start gap-3">
@@ -131,8 +134,7 @@ export function AdminPayments({
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {normalizePhone(row.phone_number) || row.phone_number} ·{" "}
-                  {row.provider ?? "—"} · {row.mode}
+                  {normalizePhone(row.phone_number) || row.phone_number} · {row.provider ?? "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">{formatKampala(row.created_at)}</p>
               </div>
@@ -146,7 +148,7 @@ export function AdminPayments({
                   </p>
                 ) : null}
                 <div className="mt-1 flex flex-wrap justify-end gap-1">
-                  {isWithdrawal ? (
+                  {isWithdrawal && row.status !== "PENDING" && row.mode !== "UNASSIGNED" ? (
                     <span className={`chip ${row.mode === "MANUAL" ? "chip-accent" : "chip-live"}`}>
                       {row.mode === "MANUAL" ? "MANUAL" : "MARZPAY"}
                     </span>
@@ -186,24 +188,61 @@ export function AdminPayments({
                   }
                   onChange={(e) => setNotes((n) => ({ ...n, [row.id]: e.target.value }))}
                 />
+                {isWithdrawal && row.status === "PENDING" ? (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-bold uppercase tracking-wider">How this is paid</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(
+                        [
+                          ["MARZPAY", "MarzPay"],
+                          ["MANUAL", "Manual"],
+                        ] as const
+                      ).map(([id, label]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setMethodChoice((current) => ({ ...current, [row.id]: id }))}
+                          className={`rounded-full px-3 py-2 text-xs font-semibold text-white ${
+                            payout === id
+                              ? "bg-primary shadow-[inset_0_0_0_2px_#ffffff]"
+                              : "bg-[#14331f]"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {payout === "MARZPAY"
+                        ? `MarzPay sends ${formatMoney(row.net_amount)} to ${phone}.`
+                        : `Send ${formatMoney(row.net_amount)} to ${phone} yourself, then mark it paid.`}
+                    </p>
+                  </div>
+                ) : null}
+                {isWithdrawal && row.status === "PROCESSING" ? (
+                  <p className="text-xs text-muted-foreground">
+                    MarzPay is sending {formatMoney(row.net_amount)} to {phone}.
+                  </p>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
-                  {isWithdrawal && row.mode === "MARZPAY" ? (
+                  {isWithdrawal && row.status === "PENDING" && payout === "MARZPAY" ? (
                     <Button
                       size="sm"
                       variant="accent"
-                      disabled={busy === row.id || row.status !== "PENDING"}
+                      disabled={busy === row.id}
                       onClick={() => review(row.id, "send")}
                     >
-                      Approve & send
+                      Send with MarzPay
                     </Button>
                   ) : null}
-                  {!isWithdrawal || row.mode === "MANUAL" || row.failure_reason ? (
-                    <Button
-                      size="sm"
-                      disabled={busy === row.id}
-                      onClick={() => review(row.id, "approve")}
-                    >
-                      {isWithdrawal ? "Mark paid" : "Credit wallet"}
+                  {isWithdrawal && row.status === "PENDING" && payout === "MANUAL" ? (
+                    <Button size="sm" disabled={busy === row.id} onClick={() => review(row.id, "approve")}>
+                      Mark paid
+                    </Button>
+                  ) : null}
+                  {!isWithdrawal ? (
+                    <Button size="sm" disabled={busy === row.id} onClick={() => review(row.id, "approve")}>
+                      Credit wallet
                     </Button>
                   ) : null}
                   <Button

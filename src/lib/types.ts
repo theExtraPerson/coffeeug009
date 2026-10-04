@@ -64,7 +64,7 @@ export type LedgerEntry = {
 };
 
 export type PaymentType = "DEPOSIT" | "WITHDRAWAL";
-export type PaymentMode = "MARZPAY" | "MANUAL";
+export type PaymentMode = "MARZPAY" | "MANUAL" | "UNASSIGNED";
 export type PaymentStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "CANCELLED";
 
 /** Admin-only note written when a payment cannot be verified automatically. */
