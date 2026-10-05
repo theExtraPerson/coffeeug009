@@ -143,7 +143,7 @@ export default function DepositPage() {
               />
               <p className="text-xs text-muted-foreground">
                 Minimum {formatMoney(min)}. Maximum{" "}
-                {formatMoney(settings?.deposit_max ?? 10_000_000)}.
+                {formatMoney(settings?.deposit_max ?? 5_000_000)}.
               </p>
             </div>
 
