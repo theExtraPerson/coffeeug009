@@ -7,6 +7,7 @@ import { dispatchWithdrawal, getPayment, pollPayment, settlePayment } from "@/se
 export async function GET(request: Request) {
   const { admin, error } = await requireAdmin();
   if (error || !admin) return jsonError(error ?? "Forbidden", error === "Unauthorized" ? 401 : 403);
+  const db = admin;
 
   const url = new URL(request.url);
   const type = url.searchParams.get("type") === "WITHDRAWAL" ? "WITHDRAWAL" : "DEPOSIT";
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
   const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") ?? 100)));
 
   function listPayments() {
-    let query = admin
+    let query = db
       .from("payments")
       .select("*")
       .eq("type", type)
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
       .slice(0, 8);
     if (open.length) {
       await Promise.all(
-        open.map((row) => pollPayment(admin, row as Payment).catch(() => null)),
+        open.map((row) => pollPayment(db, row as Payment).catch(() => null)),
       );
       const again = await listPayments();
       if (!again.error) payments = again.data;
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
 
   const ids = [...new Set((payments ?? []).map((p) => p.user_id))];
   const { data: profiles } = ids.length
-    ? await admin.from("profiles").select("id, username, full_name, phone").in("id", ids)
+    ? await db.from("profiles").select("id, username, full_name, phone").in("id", ids)
     : { data: [] };
   const memberOf = new Map((profiles ?? []).map((p) => [p.id, p]));
 
