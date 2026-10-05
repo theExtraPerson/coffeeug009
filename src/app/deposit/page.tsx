@@ -33,7 +33,7 @@ export default function DepositPage() {
   const [message, setMessage] = useState("");
   const pollRef = useRef<number | null>(null);
 
-  const min = Number(settings?.deposit_min ?? MIN_DEPOSIT);
+  const min = Math.max(Number(settings?.deposit_min ?? MIN_DEPOSIT), MIN_DEPOSIT);
   const provider = detectProvider(phone);
 
   useEffect(() => {

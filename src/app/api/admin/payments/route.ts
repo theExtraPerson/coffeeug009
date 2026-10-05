@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, jsonError } from "@/lib/admin-auth";
-import { dispatchWithdrawal, getPayment, settlePayment } from "@/server/payments";
+import type { Payment } from "@/lib/types";
+import { dispatchWithdrawal, getPayment, pollPayment, settlePayment } from "@/server/payments";
 
 /** Deposit and withdrawal queues, newest first. */
 export async function GET(request: Request) {
@@ -12,18 +13,35 @@ export async function GET(request: Request) {
   const status = url.searchParams.get("status");
   const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") ?? 100)));
 
-  let query = admin
-    .from("payments")
-    .select("*")
-    .eq("type", type)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  function listPayments() {
+    let query = admin
+      .from("payments")
+      .select("*")
+      .eq("type", type)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (status === "pending") query = query.in("status", ["PENDING", "PROCESSING"]);
+    else if (status) query = query.eq("status", status);
+    return query;
+  }
 
-  if (status === "pending") query = query.in("status", ["PENDING", "PROCESSING"]);
-  else if (status) query = query.eq("status", status);
-
-  const { data: payments, error: queryError } = await query;
+  let { data: payments, error: queryError } = await listPayments();
   if (queryError) return jsonError(queryError.message, 500);
+
+  // A confirmed MarzPay deposit should already be credited. Asking again here
+  // clears one that was left open, without showing the member an error.
+  if (type === "DEPOSIT") {
+    const open = (payments ?? [])
+      .filter((row) => row.status === "PENDING" || row.status === "PROCESSING")
+      .slice(0, 8);
+    if (open.length) {
+      await Promise.all(
+        open.map((row) => pollPayment(admin, row as Payment).catch(() => null)),
+      );
+      const again = await listPayments();
+      if (!again.error) payments = again.data;
+    }
+  }
 
   const ids = [...new Set((payments ?? []).map((p) => p.user_id))];
   const { data: profiles } = ids.length

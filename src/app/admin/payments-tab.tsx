@@ -127,16 +127,28 @@ export function AdminPayments({
           <div key={row.id} className="app-card space-y-3 p-4">
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">
-                  {row.member?.full_name ?? "Member"}{" "}
-                  <span className="font-normal text-muted-foreground">
-                    @{row.member?.username ?? "—"}
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {normalizePhone(row.phone_number) || row.phone_number} · {row.provider ?? "—"}
-                </p>
-                <p className="text-xs text-muted-foreground">{formatKampala(row.created_at)}</p>
+                {isWithdrawal ? (
+                  <>
+                    <p className="truncate text-sm font-bold">
+                      {row.member?.full_name ?? "Member"}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        @{row.member?.username ?? "—"}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {phone} · {row.provider ?? "—"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{formatKampala(row.created_at)}</p>
+                  </>
+                ) : (
+                  <div className="space-y-1 text-xs">
+                    <Detail label="Name" value={row.member?.full_name ?? "Member"} />
+                    <Detail label="Username" value={`@${row.member?.username ?? "—"}`} />
+                    <Detail label="Phone" value={phone} />
+                    <Detail label="Date" value={formatKampala(row.created_at)} />
+                    <Detail label="Network" value={row.provider ?? "—"} />
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <p className="font-display text-lg font-bold text-primary">
@@ -160,14 +172,14 @@ export function AdminPayments({
               </div>
             </div>
 
-            {row.failure_reason && row.status !== "SUCCESS" ? (
+            {isWithdrawal && row.failure_reason && row.status !== "SUCCESS" ? (
               <p className="alert-bad px-3 py-2 text-xs">{row.failure_reason}</p>
             ) : null}
-            {row.admin_note?.startsWith(PAYMENT_REVIEW_PREFIX) ? (
+            {isWithdrawal && row.admin_note?.startsWith(PAYMENT_REVIEW_PREFIX) ? (
               <p className="rounded-[13px] bg-[#e4c200]/35 px-3 py-2 text-xs font-semibold text-[#14331f]">
                 {row.admin_note}
               </p>
-            ) : row.admin_note && !open ? (
+            ) : isWithdrawal && row.admin_note && !open ? (
               <p className="app-panel px-3 py-2 text-xs text-muted-foreground">
                 Note: {row.admin_note}
               </p>
@@ -241,8 +253,8 @@ export function AdminPayments({
                     </Button>
                   ) : null}
                   {!isWithdrawal ? (
-                    <Button size="sm" disabled={busy === row.id} onClick={() => review(row.id, "approve")}>
-                      Credit wallet
+                    <Button size="sm" variant="secondary" disabled={busy === row.id} onClick={() => review(row.id, "approve")}>
+                      Credit manually
                     </Button>
                   ) : null}
                   <Button
@@ -268,5 +280,14 @@ export function AdminPayments({
         );
       })}
     </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="flex gap-2">
+      <span className="w-16 shrink-0 text-muted-foreground">{label}</span>
+      <span className="min-w-0 truncate font-semibold text-foreground">{value}</span>
+    </p>
   );
 }

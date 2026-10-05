@@ -16,6 +16,7 @@
 import { randomUUID } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { detectProvider, toMsisdn } from "@/lib/phone";
+import { MAX_DEPOSIT, MIN_DEPOSIT } from "@/lib/platform";
 import { PAYMENT_REVIEW_PREFIX, type Payment } from "@/lib/types";
 import {
   collectMoney,
@@ -65,9 +66,11 @@ export function paymentReviewIssues(payment: Payment, verdict: MarzSnapshot): st
     if (verdict.kind !== expected) issues.push("the event type does not match this payment");
   }
 
-  if (verdict.amount != null && Number.isFinite(verdict.amount)) {
-    const expectedAmount =
-      payment.type === "DEPOSIT" ? Number(payment.amount) : Number(payment.net_amount);
+  // Deposits credit the amount the member asked for. MarzPay often reports a
+  // different figure (a 5,000 deposit can come back as 5,150), and that must
+  // not block an automatic credit.
+  if (payment.type !== "DEPOSIT" && verdict.amount != null && Number.isFinite(verdict.amount)) {
+    const expectedAmount = Number(payment.net_amount);
     if (Math.round(verdict.amount) !== Math.round(expectedAmount)) {
       issues.push(
         `the amount ${Math.round(verdict.amount)} does not match ${Math.round(expectedAmount)}`,
@@ -86,39 +89,8 @@ export function paymentReviewIssues(payment: Payment, verdict: MarzSnapshot): st
 }
 
 /**
- * Hold a payment for an admin. The member is not told: status stays open and
- * the note is only visible in the admin queue.
- */
-async function flagPaymentForReview(
-  admin: Admin,
-  payment: Payment,
-  reason: string,
-): Promise<Payment> {
-  const existing = payment.admin_note ?? "";
-  const note = (
-    !existing || existing.startsWith(PAYMENT_REVIEW_PREFIX)
-      ? `${PAYMENT_REVIEW_PREFIX}${reason}`
-      : existing
-  ).slice(0, 500);
-  if (note === existing && payment.status === "PROCESSING") return payment;
-
-  const { data } = await admin
-    .from("payments")
-    .update({
-      status: "PROCESSING",
-      admin_note: note,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", payment.id)
-    .select("*")
-    .single();
-  return (data as Payment) ?? { ...payment, status: "PROCESSING", admin_note: note };
-}
-
-/**
- * Verify a gateway result. Every check must pass before the payment is marked
- * successful, the wallet is credited or debited, and the row is locked.
- * Anything that does not check out stays open and asks an admin to look.
+ * Verify a gateway result. A confirmed deposit is credited automatically.
+ * A withdrawal is credited only after an admin has approved a MarzPay payout.
  */
 export async function applyGatewayVerdict(
   admin: Admin,
@@ -165,33 +137,31 @@ export async function applyGatewayVerdict(
     return (data as Payment) ?? payment;
   }
 
-  if (verdict.missing) {
-    return flagPaymentForReview(admin, payment, "MarzPay has no record for this payment.");
-  }
-  if (verdict.status === "PENDING") return payment;
-
-  const issues = paymentReviewIssues(payment, verdict);
-  if (verdict.status === "FAILED") {
-    issues.push(
-      verdict.description
-        ? `MarzPay reported a failure: ${verdict.description}`
-        : "MarzPay reported a failure",
-    );
-  }
-  if (issues.length || verdict.status !== "SUCCESSFUL") {
-    const reason = issues.join("; ") || "The gateway result could not be verified.";
-    return flagPaymentForReview(admin, payment, reason);
-  }
+  // Deposits are automatic. A MarzPay success credits the wallet. A MarzPay
+  // failure closes the attempt. Neither writes a review note.
+  if (verdict.missing || verdict.status === "PENDING") return payment;
 
   if (payment.admin_note?.startsWith(PAYMENT_REVIEW_PREFIX)) {
     await admin
       .from("payments")
-      .update({ admin_note: null, updated_at: new Date().toISOString() })
+      .update({ admin_note: null, failure_reason: null, updated_at: new Date().toISOString() })
       .eq("id", payment.id);
   }
 
-  await settlePayment(admin, payment.id, true, { providerTx: verdict.providerTx });
-  return (await getPayment(admin, payment.id)) ?? payment;
+  if (verdict.status === "SUCCESSFUL") {
+    await settlePayment(admin, payment.id, true, { providerTx: verdict.providerTx });
+    return (await getPayment(admin, payment.id)) ?? payment;
+  }
+
+  if (verdict.status === "FAILED") {
+    await settlePayment(admin, payment.id, false, {
+      reason: "The deposit was not completed.",
+      providerTx: verdict.providerTx,
+    });
+    return (await getPayment(admin, payment.id)) ?? payment;
+  }
+
+  return payment;
 }
 
 /**
@@ -238,8 +208,8 @@ export async function createDeposit(
     .select("deposit_min, deposit_max, frozen")
     .eq("id", 1)
     .maybeSingle();
-  const min = Number(settingsRow?.deposit_min ?? 1000);
-  const max = Number(settingsRow?.deposit_max ?? 10_000_000);
+  const min = Math.max(Number(settingsRow?.deposit_min ?? MIN_DEPOSIT), MIN_DEPOSIT);
+  const max = Number(settingsRow?.deposit_max ?? MAX_DEPOSIT);
   if (settingsRow?.frozen) throw new Error("Deposits are temporarily paused.");
   if (!Number.isFinite(amount) || amount < min) {
     throw new Error(`Minimum deposit is UGX ${min.toLocaleString("en-UG")}.`);
